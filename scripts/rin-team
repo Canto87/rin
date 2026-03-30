@@ -1,0 +1,175 @@
+#!/bin/bash
+# rin-team — Team mode: Claude (leader) + teammate provider selection
+#
+# Usage:
+#   rin-team gemini              — all teammates use Gemini
+#   rin-team glm                 — all teammates use GLM
+#   rin-team all                 — opus=gemini-pro, sonnet=glm-5, haiku=gemini-flash
+#   rin-team all --resume <id>   — above + session resume
+#
+# First argument is the provider, remaining args are passed to rin.
+# All traffic routes through rin-proxy.
+# Leader uses --model claude-opus-4-6 explicitly -> proxy passes through to Anthropic.
+# Teammates use ANTHROPIC_DEFAULT_*_MODEL aliases -> proxy routes to the specified provider.
+
+set -euo pipefail
+
+CYAN='\033[36m'
+DIM='\033[2m'
+RED='\033[31m'
+GREEN='\033[32m'
+YELLOW='\033[33m'
+RESET='\033[0m'
+
+PROXY_PORT="${RIN_PROXY_PORT:-3456}"
+PROVIDER="${1:-gemini}"
+SESSION_NAME="rin-team"
+
+# ── Provider validation ──────────────────────────────
+
+case "$PROVIDER" in
+  gemini|glm|all) ;;
+  *)
+    printf "${RED}Unknown provider: ${PROVIDER}${RESET}\n"
+    echo ""
+    echo "  Usage: rin-team [gemini|glm|all] [rin options...]"
+    exit 1
+    ;;
+esac
+
+# Pass remaining args after provider to rin
+shift
+
+# ── Proxy check ──────────────────────────────────────
+
+if ! nc -z localhost "$PROXY_PORT" 2>/dev/null; then
+  printf "${RED}rin-proxy is not running (port ${PROXY_PORT}).${RESET}\n"
+  echo ""
+  echo "  make install-proxy"
+  exit 1
+fi
+
+# ── Model mapping ────────────────────────────────────
+
+case "$PROVIDER" in
+  gemini)
+    OPUS_MODEL="gemini-pro"
+    SONNET_MODEL="gemini-pro"
+    HAIKU_MODEL="gemini-flash"
+    ;;
+  glm)
+    OPUS_MODEL="glm-5"
+    SONNET_MODEL="glm-5"
+    HAIKU_MODEL="glm-5"
+    ;;
+  all)
+    OPUS_MODEL="gemini-pro"
+    SONNET_MODEL="glm-5"
+    HAIKU_MODEL="gemini-flash"
+    ;;
+esac
+
+# ── Helper: inject env into tmux session ─────────────
+
+inject_env() {
+  local target="${1:-}"
+  local flag=""
+  [ -n "$target" ] && flag="-t $target"
+  tmux set-environment $flag ANTHROPIC_BASE_URL "http://localhost:${PROXY_PORT}"
+  tmux set-environment $flag ANTHROPIC_DEFAULT_OPUS_MODEL "$OPUS_MODEL"
+  tmux set-environment $flag ANTHROPIC_DEFAULT_SONNET_MODEL "$SONNET_MODEL"
+  tmux set-environment $flag ANTHROPIC_DEFAULT_HAIKU_MODEL "$HAIKU_MODEL"
+  tmux set-environment $flag CLAUDE_CODE_TEAMMATE_DISPLAY "tmux"
+}
+
+# Export to current shell — child processes (teammates) inherit these
+export_to_shell() {
+  export ANTHROPIC_BASE_URL="http://localhost:${PROXY_PORT}"
+  export ANTHROPIC_DEFAULT_OPUS_MODEL="$OPUS_MODEL"
+  export ANTHROPIC_DEFAULT_SONNET_MODEL="$SONNET_MODEL"
+  export ANTHROPIC_DEFAULT_HAIKU_MODEL="$HAIKU_MODEL"
+  export CLAUDE_CODE_TEAMMATE_DISPLAY="tmux"
+}
+
+print_status() {
+  echo ""
+  printf "  ${GREEN}Team mode activated (${PROVIDER})${RESET}\n"
+  echo ""
+  printf "  ${CYAN}Leader${RESET}    ${DIM}claude-opus-4-6${RESET}  → proxy → Anthropic\n"
+  printf "  ${CYAN}Teammate${RESET}  ${DIM}alias model${RESET}       → proxy → ${PROVIDER}\n"
+  echo ""
+  printf "  Model mapping:\n"
+  printf "    opus   → ${YELLOW}${OPUS_MODEL}${RESET}\n"
+  printf "    sonnet → ${YELLOW}${SONNET_MODEL}${RESET}\n"
+  printf "    haiku  → ${YELLOW}${HAIKU_MODEL}${RESET}\n"
+  echo ""
+}
+
+# Build rin command (preserve args)
+build_rin_cmd() {
+  local cmd="rin"
+  for arg in "$@"; do
+    # Quote args with spaces or special characters
+    if [[ "$arg" =~ [[:space:]] ]]; then
+      cmd="$cmd \"$arg\""
+    else
+      cmd="$cmd $arg"
+    fi
+  done
+  echo "$cmd"
+}
+
+RIN_CMD=$(build_rin_cmd --model claude-opus-4-6 "$@")
+
+# ── Already in tmux — inject env + run rin ────────────
+
+if [ -n "${TMUX:-}" ]; then
+  inject_env
+  export_to_shell
+  print_status
+  exec rin --model claude-opus-4-6 "$@"
+fi
+
+# ── Outside tmux — create session automatically ──────
+
+if ! command -v tmux >/dev/null 2>&1; then
+  printf "${RED}tmux is not installed.${RESET}\n"
+  echo ""
+  echo "  brew install tmux"
+  exit 1
+fi
+
+# iTerm2 uses tmux -CC (native UI), otherwise plain tmux
+if [ "${TERM_PROGRAM:-}" = "iTerm.app" ]; then
+  TMUX_CMD="tmux -CC"
+  HINT="Cmd+D to split pane, Cmd+T for new tab"
+else
+  TMUX_CMD="tmux"
+  HINT="Ctrl+B % to split pane, Ctrl+B C for new window"
+fi
+
+# Attach to existing session if present
+if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+  echo ""
+  printf "  ${GREEN}Attaching to existing team session...${RESET}\n"
+  echo ""
+  exec $TMUX_CMD attach -t "$SESSION_NAME"
+fi
+
+# Create new session + inject env + run rin
+tmux new-session -d -s "$SESSION_NAME"
+inject_env "$SESSION_NAME"
+# Export env vars in the pane's shell so child processes (teammates) inherit them
+ENV_EXPORT="export ANTHROPIC_BASE_URL='http://localhost:${PROXY_PORT}'"
+ENV_EXPORT+=" ANTHROPIC_DEFAULT_OPUS_MODEL='${OPUS_MODEL}'"
+ENV_EXPORT+=" ANTHROPIC_DEFAULT_SONNET_MODEL='${SONNET_MODEL}'"
+ENV_EXPORT+=" ANTHROPIC_DEFAULT_HAIKU_MODEL='${HAIKU_MODEL}'"
+ENV_EXPORT+=" CLAUDE_CODE_TEAMMATE_DISPLAY=tmux"
+tmux send-keys -t "$SESSION_NAME" "${ENV_EXPORT} && ${RIN_CMD}" Enter
+
+print_status
+echo -e "  ${DIM}${HINT}${RESET}"
+printf "  ${DIM}Exit: rin-cc${RESET}\n"
+echo ""
+
+exec $TMUX_CMD attach -t "$SESSION_NAME"

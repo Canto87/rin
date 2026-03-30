@@ -1,0 +1,50 @@
+# Smart Commit Skill Configuration
+# Project: project-rin
+# Customize layer paths to match your project structure.
+
+# Layer grouping priority (higher = grouped first)
+layers:
+  - name: "MCP Server"
+    paths:
+      - "src/rin_memory/"
+    priority: 1
+
+  - name: "Proxy"
+    paths:
+      - "src/rin_proxy/"
+    priority: 1
+
+  - name: "Scripts"
+    paths:
+      - "scripts/"
+    priority: 2
+
+  - name: "Context / Config"
+    paths:
+      - "context/"
+      - "launchd/"
+    priority: 3
+
+  - name: "Tests"
+    paths:
+      - "tests/"
+      - "**/*_test.py"
+      - "**/*_test.go"
+    priority: 4
+
+  - name: "Docs"
+    paths:
+      - "docs/"
+      - "*.md"
+    priority: 5
+
+# Files that always go into their own commit (never merged with others)
+always_separate:
+  - "go.mod"
+  - "go.sum"
+  - "pyproject.toml"
+  - "requirements*.txt"
+
+# Post-commit GC scan
+gc:
+  enabled: true

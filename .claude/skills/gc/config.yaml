@@ -1,0 +1,24 @@
+# gc skill configuration
+# Project-specific settings for project-rin
+
+project:
+  name: "project-rin"
+  language: python
+
+scan:
+  include:
+    - "src/"
+  exclude:
+    - "*_test.go"
+    - "test_*.py"
+    - "vendor/"
+    - "node_modules/"
+    - ".claude/"
+
+categories:
+  enabled: [dead-code, pattern-drift, duplication, stale-artifacts, dependency-violation]
+
+memory:
+  prune_after_days: 90
+  min_tags: 3
+  drift_check: true

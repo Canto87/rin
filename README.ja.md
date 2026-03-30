@@ -1,0 +1,269 @@
+<p align="center">
+  <br>
+  <code>██████╗ ██╗███╗   ██╗</code><br>
+  <code>██╔══██╗██║████╗  ██║</code><br>
+  <code>██████╔╝██║██╔██╗ ██║</code><br>
+  <code>██╔══██╗██║██║╚██╗██║</code><br>
+  <code>██║  ██║██║██║ ╚████║</code><br>
+  <code>╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝</code><br>
+  <br>
+  <strong>凛 — 澄み切った判断</strong><br>
+  <sub>永続的な記憶とマルチモデルルーティングを備えた自律型開発エージェント</sub>
+</p>
+
+<p align="center">
+  <a href="#クイックスタート">クイックスタート</a> &middot;
+  <a href="#仕組み">仕組み</a> &middot;
+  <a href="#アーキテクチャ">アーキテクチャ</a> &middot;
+  <a href="#チームモード">チームモード</a> &middot;
+  <a href="#開発ワークフロー">開発ワークフロー</a> &middot;
+  <a href="#コマンド">コマンド</a> &middot;
+  <a href="README.md">English</a> &middot;
+  <a href="README.ko.md">한국어</a>
+</p>
+
+---
+
+RINは[Claude Code](https://github.com/anthropics/claude-code)上に構築された自律型開発エージェントです。**永続的な長期記憶**（PostgreSQL + pgvector + AGEグラフ）、**自動セッション収集**、**マルチモデルルーティング**（Gemini、GLM）、**自己定義されたアイデンティティ**をCLIに統合し、ステートレスなLLMを、過去の意思決定を記憶し、失敗から学び、セッション間でコンテキストを維持する継続的な協働者へと変えます。
+
+## クイックスタート
+
+### 1. 前提条件のインストール
+
+| ツール | macOS | Linux |
+|--------|-------|-------|
+| Python 3.11+ | `brew install python@3.12` | `apt install python3 python3-venv` |
+| Go 1.26+ | `brew install go` | [go.dev/dl](https://go.dev/dl/) |
+| Docker | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | `apt install docker.io docker-compose-plugin` |
+| Ollama | `brew install ollama` | [ollama.com](https://ollama.com/) |
+| Claude Code | `npm i -g @anthropic-ai/claude-code` | 同上 |
+
+### 2. RINのインストール
+
+```bash
+git clone https://github.com/Canto87/project-rin-oss.git
+cd project-rin-oss
+make install
+```
+
+実行順序:
+1. **check** — 前提条件の確認
+2. **setup** — Python venv作成 + パッケージインストール
+3. **install-db** — DockerでPostgreSQL起動 (PG17 + pgvector + AGE)
+4. **memory-go** — Goメモリサーバービルド
+5. **pull-model** — Ollama起動 + 埋め込みモデルプル (~670MB)
+6. **sync-mcp** — MCPサーバーを`~/.claude.json`に登録
+7. **install-cron** — セッション収集/レビュー/整理を登録 (macOS launchd、Linuxではスキップ)
+8. **shell-setup** — `rin`をPATHに追加 (zsh/bash/fish自動検出)
+
+### 3. 起動
+
+```bash
+source ~/.zshrc   # またはシェルを再起動
+rin
+```
+
+## 仕組み
+
+```
+  rin                              # 起動
+   ├─ session-picker.py            # 選択: 新規 / 再開 / コンテキスト読み込み
+   ├─ rin-memory-recall            # 直近の記憶をシステムプロンプトに注入
+   ├─ rin-context.md               # アイデンティティ、原則、判断の境界
+   └─ claude                       # Claude Code実行
+        │
+        ├─ rin-memory-go (MCP)     # セマンティック検索、意思決定保存、グラフ関係
+        │   ├─ PostgreSQL          #   構造化メタデータ + 全文検索
+        │   ├─ pgvector            #   ベクトル埋め込み (Ollama, 1024次元)
+        │   └─ AGE                 #   ナレッジグラフ (関係探索)
+        │
+    [セッション終了]
+        │
+        ├─ session-harvest         # JSONL → Markdown (launchd, 10分)
+        └─ session-review          # RINが要約 → memory_store (launchd, 1時間)
+```
+
+**セッションライフサイクル:**
+
+1. **起動** — セッションピッカーが直近のセッションを表示。再開するか、コンテキストを引き継いで新規セッションを開始。
+2. **作業** — MCPツールで記憶を読み書き。意思決定やパターンが蓄積される。
+3. **終了** — セッションのJSONLが自動的に構造化ノートへ収集される。
+4. **レビュー** — バックグラウンドのRINインスタンスがノートを要約し、知識を抽出。
+5. **次のセッション** — リコールされた記憶に過去の意思決定、未完了タスク、チームパターンが含まれる。
+
+## アーキテクチャ
+
+```
+src/
+  rin_memory_go/         # MCPサーバー (Go, PostgreSQL + pgvector + AGE)
+    main.go              #   エントリポイント + MCPツール登録
+    store.go             #   PostgreSQL接続 + ストレージ
+    search.go            #   セマンティック + 全文ハイブリッド検索
+    graph.go             #   AGEグラフ操作
+    embed.go             #   Ollama埋め込み
+    tools_memory.go      #   memory_* ツール (store, search, lookup, update, relate, ingest)
+    tools_routing.go     #   routing_* ツール (suggest, log, stats)
+    cmd_recall.go        #   recallサブコマンド (システムプロンプト注入用)
+  rin_proxy/             # APIプロキシ (Go, マルチモデルルーティング)
+    main.go              #   HTTPサーバー (:3456)
+    openai.go            #   OpenAI互換API → 各プロバイダ変換
+    passthrough.go       #   Anthropicモデルはパススルー
+    streaming.go         #   SSEストリーミング対応
+scripts/
+  rin                    #   エントリポイント (バナー + ピッカー + claude)
+  rin-team               #   チームモード (マルチプロバイダ tmux)
+  rin-cc                 #   チームモード解除
+  session-picker.py      #   対話型セッションセレクタ
+  session-harvest.py     #   JSONL → Markdown (launchd)
+  session-review.sh      #   RINによる要約 (launchd)
+  rin-memory-recall.py   #   記憶 → システムプロンプト注入
+  sync-mcp.py            #   MCP設定 → ~/.claude.json
+  migrate-to-pg.py       #   SQLite → PostgreSQLマイグレーション
+context/
+  rin-context.md         #   アイデンティティ、原則、判断の境界
+launchd/                 #   macOSエージェントplist (テンプレート)
+config/
+  mcp-servers.json       #   MCPサーバー定義
+```
+
+### データ
+
+| パス | 用途 |
+|------|------|
+| PostgreSQL `rin_memory` | ドキュメント、ベクトル、関係グラフ |
+| pgvector HNSWインデックス | 1024次元セマンティック検索 |
+| AGE `rin_memory` グラフ | ナレッジ関係探索 (supersedes, related, implements, contradicts) |
+| `memory/sessions/` | 収集済みセッションノート (取り込み前) |
+
+### 記憶の種類
+
+| Kind | 説明 |
+|------|------|
+| `session_journal` | セッションのタイトル + 要約 |
+| `arch_decision` | アーキテクチャ上の意思決定と根拠 |
+| `domain_knowledge` | 外部サービスの癖、トラブルシューティング記録 |
+| `team_pattern` | 協働パターン、ワークフロールール |
+| `active_task` | セッション間で引き継がれる未完了タスク |
+| `error_pattern` | 頻出エラーパターンと解決策 |
+| `preference` | ユーザーの好み (ワークフロー、ツール、スタイル) |
+| `routing_log` | モデルルーティングのパフォーマンスデータ |
+
+## チームモード
+
+`rin-team`はOpus（リーダー）と他プロバイダのモデル（チームメイト）を組み合わせ、マルチエージェントチームを構成します。
+
+```bash
+rin-team gemini          # チームメイト: Gemini
+rin-team glm             # チームメイト: GLM
+rin-team all             # opus→Gemini Pro, sonnet→GLM-5, haiku→Gemini Flash
+```
+
+```
+  rin-team gemini
+   │
+   ├─ rin-proxy (:3456)             # APIゲートウェイ
+   │
+   ├─ リーダー (claude-opus-4-6)   # → proxy → Anthropic (パススルー)
+   │   └─ 設計、レビュー、オーケストレーション
+   │
+   ├─ チームメイト (sonnet alias)   # → proxy → Gemini
+   │   └─ 実装、調査、テスト
+   │
+   └─ チームメイト (haiku alias)    # → proxy → Gemini Flash
+       └─ 軽量タスク、探索
+```
+
+**前提条件:** `make install-proxy`でrin-proxyのlaunchd登録が必要です。
+
+## 開発ワークフロー
+
+### 日常的な使用
+
+```bash
+rin                          # RIN起動 — 最近のセッション一覧を表示
+rin --resume <session-id>    # 特定のセッションを再開
+```
+
+RINはセッション間で記憶を保持します。決定、エラーパターン、プリファレンスがメモリに保存され、次回起動時に自動的に呼び出されます。
+
+### 組み込みスキル & コマンド
+
+```bash
+/commit          # 意味のあるメッセージで自動グループコミット
+/pr              # サマリーとテストプランを含むPR作成
+/code-review     # 現在の変更に対する重み付きコードレビュー
+```
+
+`.claude/commands/`で定義され、`.claude/skills/`のスキルに委譲します。
+
+### 他プロジェクトへのデプロイ
+
+RINのハーネス（エージェント、スキル、コマンド）を他のプロジェクトにデプロイできます:
+
+```bash
+make sync-harness TARGET=~/workspace/other-project
+```
+
+`skill.md`ファイルのみコピーされます。プロジェクト固有の`config.yaml`は上書きされません。
+
+### カスタマイズ
+
+- **`context/rin-context.md`** — 行動原則と判断境界。RINの動作方式を変更するにはこのファイルを編集します。
+- **`.claude/skills/*/config.yaml`** — スキル別設定（閾値、モード）。
+- **`~/.rin/memory-config.json`** — データベースDSN、Ollama URLオーバーライド。
+
+## コマンド
+
+```
+make install            フルインストール (venv + MCP + モデル + Docker PG + Goビルド + launchd + PATH)
+make rin                RINを起動
+make test               Dockerで全パイプラインテスト (8ステップ)
+```
+
+### 個別ステップ
+
+`make install`が全てを実行しますが、個別にも使用可能:
+
+```
+make check              前提条件の確認 (Python, Go, Docker, Ollama)
+make setup              venv + パッケージインストール
+make install-db         DockerでPostgreSQL起動 (PG17 + pgvector + AGE)
+make memory-go          Goメモリサーバーのビルド
+make proxy              Goプロキシのビルド
+make install-cron       セッション収集/レビュー/整理 launchd登録
+make sync-mcp           MCP設定の同期
+```
+
+### 運用
+
+```
+make harvest            セッション収集 (手動)
+make review             セッションレビュー (手動)
+make dream              メモリ整理 (手動)
+make team               チームモード: Claudeリーダー + プロバイダーチームメイト (gemini|glm|all)
+make cc              チームモード終了
+make sync-harness       他プロジェクトにハーネスをデプロイ (TARGET=<パス>)
+make help               全ターゲットを表示
+```
+
+### オプション
+
+```bash
+# rin-proxy (チームモードの前提条件)
+GEMINI_API_KEY=<key> GLM_API_KEY=<key> make install-proxy
+
+# Ollama常時起動
+make install-ollama
+```
+
+### クリーンアップ
+
+```bash
+make uninstall-db       PostgreSQLコンテナ + データ削除
+make uninstall-cron     launchdエージェント削除
+make uninstall-proxy    rin-proxy launchd削除
+```
+
+## ライセンス
+
+MIT

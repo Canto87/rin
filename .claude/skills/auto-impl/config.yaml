@@ -1,0 +1,9 @@
+# auto-impl skill configuration
+# Project-specific settings for project-rin
+
+project:
+  name: "project-rin"
+  language: python  # go | python | typescript | java | rust | other
+
+paths:
+  plans: "docs/plans"   # Design docs location

@@ -1,0 +1,6 @@
+{
+  "rin-memory": {
+    "type": "stdio",
+    "command": "__RIN_HOME__/src/rin_memory_go/rin-memory-go"
+  }
+}

@@ -1,0 +1,36 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+
+# RIN runtime
+memory/sessions/
+memory/.harvest-state.json
+context/rin-context-local.md
+
+# Compiled binaries
+src/rin_proxy/rin-proxy
+src/rin_memory_go/rin-memory-go
+
+# Local config (not for sharing)
+.claude/settings.local.json
+.mcp.json
+.serena/
+.ruff_cache/
+
+# Secrets
+.env
+*.pem
+*.key

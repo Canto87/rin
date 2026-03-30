@@ -1,0 +1,7 @@
+# auto-research skill configuration
+# Project-specific defaults for project-rin
+
+defaults:
+  budget: 5              # minutes per experiment
+  max_experiments: 50    # stop after N experiments
+  direction: lower       # lower|higher — which direction is "better"

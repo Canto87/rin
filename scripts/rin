@@ -1,0 +1,119 @@
+#!/bin/bash
+RIN_HOME="${RIN_HOME:-$(cd "$(dirname "$0")/.." && pwd)}"
+
+# Project slug — matches Claude Code's ~/.claude/projects/ dir naming
+export RIN_PROJECT="${RIN_PROJECT:-$(echo "$PWD" | sed 's/[^a-zA-Z0-9]/-/g')}"
+
+RIN_CTX="$RIN_HOME/context/rin-context.md"
+if [ ! -f "$RIN_CTX" ]; then
+  echo "[RIN] Error: $RIN_CTX not found."
+  exit 1
+fi
+
+# ── Banner ──────────────────────────────────────────
+CYAN='\033[36m'
+DIM='\033[2m'
+RESET='\033[0m'
+WHITE='\033[1;37m'
+
+GO_BIN="$RIN_HOME/src/rin_memory_go/rin-memory-go"
+mem_info=""
+
+if [ -x "$GO_BIN" ]; then
+  mem_total=$("$GO_BIN" count 2>/dev/null || echo "?")
+  if [ -n "$mem_total" ] && [ "$mem_total" != "?" ]; then
+    mem_info="${mem_total} docs"
+  fi
+fi
+
+echo ""
+printf "${CYAN}  ██████╗ ██╗███╗   ██╗${RESET}\n"
+printf "${CYAN}  ██╔══██╗██║████╗  ██║${RESET}\n"
+printf "${CYAN}  ██████╔╝██║██╔██╗ ██║${RESET}\n"
+printf "${CYAN}  ██╔══██╗██║██║╚██╗██║${RESET}\n"
+printf "${CYAN}  ██║  ██║██║██║ ╚████║${RESET}\n"
+printf "${CYAN}  ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝${RESET}\n"
+echo ""
+printf "  ${WHITE}凛${RESET} ${DIM}— clear and resolute${RESET}\n"
+if [ -n "$mem_info" ]; then
+  printf "  ${DIM}記憶${RESET} ${CYAN}${mem_info}${RESET}\n"
+fi
+
+# ── Session Picker ─────────────────────────────────
+SESSION_ARGS=()
+
+# Skip session picker if --resume is present in args
+SKIP_PICKER=false
+for arg in "$@"; do
+  [ "$arg" = "--resume" ] && SKIP_PICKER=true && break
+done
+
+if [ "$SKIP_PICKER" = false ] && [ -t 0 ] && command -v python3 >/dev/null 2>&1; then
+  PICK=$(python3 "$RIN_HOME/scripts/session-picker.py" 2>/dev/tty)
+
+  case "$PICK" in
+    resume:*)
+      SESSION_ARGS=(--resume "${PICK#resume:}")
+      ;;
+    context:*)
+      export RIN_LOAD_SESSION="${PICK#context:}"
+      ;;
+  esac
+fi
+
+# ── Register as RIN project ──────────────────────────
+# Register project so harvest can identify RIN sessions
+RIN_PROJECTS_FILE="${RIN_MEMORY_DIR:-$HOME/.rin}/rin-projects.json"
+mkdir -p "$(dirname "$RIN_PROJECTS_FILE")"
+python3 -c "
+import json, os
+f = '$RIN_PROJECTS_FILE'
+proj = '$RIN_PROJECT'
+try:
+    data = json.loads(open(f).read())
+except (FileNotFoundError, json.JSONDecodeError):
+    data = {}
+if proj not in data:
+    data[proj] = {'cwd': os.getcwd(), 'registered_at': __import__('datetime').datetime.now().isoformat()}
+    with open(f, 'w') as fh:
+        fh.write(json.dumps(data, indent=2, ensure_ascii=False) + '\n')
+" 2>/dev/null
+
+echo ""
+
+# Memory recall — load recent context from rin-memory-go
+RECALL=""
+if [ -x "$GO_BIN" ]; then
+  RECALL=$("$GO_BIN" recall 2>/dev/null)
+elif command -v python3 >/dev/null 2>&1; then
+  RECALL=$(python3 "$RIN_HOME/scripts/rin-memory-recall.py" 2>/dev/null)
+fi
+
+RIN_CTX_LOCAL="$RIN_HOME/context/rin-context-local.md"
+
+PROMPT="$(cat "$RIN_CTX")"
+
+# Load local environment-specific config if present
+if [ -f "$RIN_CTX_LOCAL" ]; then
+  PROMPT="$PROMPT
+
+$(cat "$RIN_CTX_LOCAL")"
+fi
+
+if [ -n "$RECALL" ]; then
+  PROMPT="$PROMPT
+
+$RECALL"
+fi
+
+PROMPT="$PROMPT
+
+## Current Project
+project_slug: $RIN_PROJECT
+
+You are RIN. Follow the identity and decision boundaries above."
+
+# Session notes are created by harvest (cron) and summarized by review (cron) into memory.
+# No additional processing needed at session end.
+
+exec claude --append-system-prompt "$PROMPT" "${SESSION_ARGS[@]}" "$@"

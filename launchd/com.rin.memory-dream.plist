@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.rin.memory-dream</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__RIN_HOME__/scripts/memory-dream.sh</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>86400</integer>
+    <key>StandardOutPath</key>
+    <string>/tmp/rin-memory-dream.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/rin-memory-dream.log</string>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>WorkingDirectory</key>
+    <string>__RIN_HOME__</string>
+</dict>
+</plist>

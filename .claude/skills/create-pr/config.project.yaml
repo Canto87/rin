@@ -1,0 +1,143 @@
+# Create PR Skill Configuration
+# Project: project-rin
+
+# Base branch for PRs
+base_branch: "main"
+
+# PR title settings
+title:
+  max_length: 72
+  include_type: true  # Include feat/fix/etc prefix
+
+# PR description language: "en" (English) or "ja" (Japanese)
+template:
+  language: "en"
+  sections:
+    - name: "Background"
+      key: "background"
+      description: "Purpose of changes, related issues or tickets"
+      auto_generate: true
+      required: true
+
+    - name: "Changes"
+      key: "changes"
+      description: "Main changes, new/modified files"
+      auto_generate: true
+      required: true
+      include_screenshots: false
+
+    - name: "Impact & Verification"
+      key: "impact"
+      description: "Affected scope and how it was tested"
+      auto_generate: true
+      required: true
+
+    - name: "Notes"
+      key: "notes"
+      description: "Additional context, migration steps, deploy notes"
+      auto_generate: false
+      required: false
+
+    - name: "Checklist"
+      key: "checklist"
+      description: "Pre-merge checklist"
+      auto_generate: true
+      required: true
+
+    - name: "Remaining Tasks"
+      key: "remaining"
+      description: "Tasks to complete before or after merge"
+      auto_generate: false
+      required: false
+      hint: "Remove this section if there are no remaining tasks."
+
+# Checklist items
+checklist:
+  # Always shown
+  default:
+    - "Changes are self-contained and logically grouped?"
+    - "Backward compatibility considered?"
+    - "Safe to revert in case of incident?"
+
+  # Conditional items (shown based on file changes)
+  conditional:
+    - condition: "schema_changes"
+      item: "Migration is safe to roll back?"
+
+    - condition: "api_changes"
+      item: "API changes are backward compatible?"
+
+    - condition: "test_changes"
+      item: "Test coverage is sufficient?"
+
+# File pattern detection for conditional sections
+detection:
+  schema_changes:
+    - "migrations/*.sql"
+    - "**/*.sql"
+
+  query_changes:
+    - "src/rin_memory/store.py"
+
+  schema_or_query_changes:
+    - "migrations/*.sql"
+    - "src/rin_memory/store.py"
+
+  ui_changes: []
+
+  daemon_changes: []
+
+  entity_changes:
+    - "src/rin_memory/*.py"
+
+  api_changes:
+    - "src/rin_memory/server.py"
+    - "src/rin_proxy/*.go"
+
+  test_changes:
+    - "tests/**"
+    - "**/*_test.py"
+    - "**/*_test.go"
+
+# Layer detection for impact analysis
+layers:
+  - name: "MCP Server"
+    path: "src/rin_memory/"
+    impact: "high"
+    description: "Memory MCP server"
+
+  - name: "Proxy"
+    path: "src/rin_proxy/"
+    impact: "high"
+    description: "Anthropic/Gemini proxy"
+
+  - name: "Scripts"
+    path: "scripts/"
+    impact: "medium"
+    description: "Automation scripts"
+
+  - name: "Context"
+    path: "context/"
+    impact: "low"
+    description: "Identity and system prompt context"
+
+  - name: "Launchd"
+    path: "launchd/"
+    impact: "low"
+    description: "macOS launchd plists"
+
+  - name: "Tests"
+    path: "tests/"
+    impact: "info"
+    description: "Test code"
+
+  - name: "Docs"
+    path: "docs/"
+    impact: "info"
+    description: "Documentation"
+
+# Git settings
+git:
+  auto_push: true           # Push branch before creating PR
+  draft_by_default: false   # Create as draft PR
+  request_review: false     # Don't auto-request reviewers

@@ -1,0 +1,32 @@
+# plan-feature skill configuration
+# Project-specific settings for project-rin
+
+project:
+  name: "project-rin"
+  language: python  # go | python | typescript | java | rust | other
+
+paths:
+  source: "src"         # Source code path
+  plans: "docs/plans"   # Design docs output path
+
+# Integration layers for Q&A integration question
+integrations:
+  - label: "MCP Server"
+    description: "FastMCP tool definitions (src/rin_memory/server.py)"
+    path: "src/rin_memory"
+  - label: "Storage"
+    description: "LanceDB + PostgreSQL data layer (src/rin_memory/store.py)"
+    path: "src/rin_memory/store.py"
+  - label: "Proxy"
+    description: "Go reverse proxy for API routing (src/rin_proxy/)"
+    path: "src/rin_proxy"
+
+# Storage options for Q&A storage question
+storage:
+  - label: "PostgreSQL + pgvector"
+    description: "Primary vector + relational DB"
+    recommended: true
+  - label: "LanceDB"
+    description: "Local vector store (legacy)"
+  - label: "File system"
+    description: "Plain files in ~/.rin/"

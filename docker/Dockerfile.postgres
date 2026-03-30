@@ -1,0 +1,16 @@
+FROM pgvector/pgvector:pg17
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential git postgresql-server-dev-17 \
+    libreadline-dev bison flex zlib1g-dev curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Apache AGE (PG17 branch)
+RUN cd /tmp \
+    && git clone --branch PG17 --depth 1 https://github.com/apache/age.git \
+    && cd age && make && make install \
+    && cd / && rm -rf /tmp/age
+
+COPY docker/init-db.sql /docker-entrypoint-initdb.d/01-init.sql
+
+CMD ["postgres", "-c", "shared_preload_libraries=age"]

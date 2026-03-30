@@ -1,0 +1,46 @@
+#!/bin/bash
+# rin-cc — Return to Claude mode
+#
+# Removes Gemini proxy-related variables from tmux session env.
+# If in an iTerm2 tmux -CC session, kills the session entirely.
+
+set -euo pipefail
+
+GREEN='\033[32m'
+DIM='\033[2m'
+RESET='\033[0m'
+
+SESSIONS=("rin-team")
+
+if [ -z "${TMUX:-}" ]; then
+  # Running outside tmux — kill team sessions if they exist
+  found=false
+  for s in "${SESSIONS[@]}"; do
+    if tmux has-session -t "$s" 2>/dev/null; then
+      tmux kill-session -t "$s"
+      found=true
+    fi
+  done
+  echo ""
+  if [ "$found" = true ]; then
+    printf "  ${GREEN}Team session terminated${RESET}\n"
+    printf "  ${DIM}Returning to Claude mode.${RESET}\n"
+  else
+    echo "No active team sessions found."
+  fi
+  echo ""
+  exit 0
+fi
+
+# ── Running inside tmux — remove env vars ─────────────
+
+tmux set-environment -u ANTHROPIC_BASE_URL 2>/dev/null || true
+tmux set-environment -u ANTHROPIC_DEFAULT_OPUS_MODEL 2>/dev/null || true
+tmux set-environment -u ANTHROPIC_DEFAULT_SONNET_MODEL 2>/dev/null || true
+tmux set-environment -u ANTHROPIC_DEFAULT_HAIKU_MODEL 2>/dev/null || true
+tmux set-environment -u CLAUDE_CODE_TEAMMATE_DISPLAY 2>/dev/null || true
+
+echo ""
+printf "  ${GREEN}Returned to Claude mode${RESET}\n"
+printf "  ${DIM}All new panes will use the Claude API.${RESET}\n"
+echo ""

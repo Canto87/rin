@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__rin-memory__*",
+      "Bash(.venv/bin/pytest*)",
+      "Bash(.venv/bin/ruff *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(gh pr *)"
+    ]
+  }
+}
