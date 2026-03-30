@@ -40,7 +40,7 @@ RIN is an autonomous development agent built on [Claude Code](https://github.com
 ### 2. Install RIN
 
 ```bash
-git clone https://github.com/Canto87/project-rin-oss.git
+git clone https://github.com/Canto87/rin.git
 cd project-rin-oss
 make install
 ```

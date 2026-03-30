@@ -40,7 +40,7 @@ RIN은 [Claude Code](https://github.com/anthropics/claude-code) 위에 구축된
 ### 2. RIN 설치
 
 ```bash
-git clone https://github.com/Canto87/project-rin-oss.git
+git clone https://github.com/Canto87/rin.git
 cd project-rin-oss
 make install
 ```
