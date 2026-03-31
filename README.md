@@ -46,16 +46,16 @@ make install
 ```
 
 This runs the following in order:
-1. **check** — verify all prerequisites are installed
-2. **setup** — create Python venv + install packages
-3. **install-db** — start PostgreSQL via Docker (PG17 + pgvector + AGE)
-4. **memory-go** — build Go memory server
-5. **pull-model** — start Ollama + pull embedding model (~670MB)
-6. **sync-mcp** — register MCP server in `~/.claude.json`
-7. **install-statusline** — install Claude Code statusline (usage + memory count)
-8. **install-harness-global** — deploy agents/skills/commands to `~/.claude/` (available in all projects)
-9. **install-cron** — register session harvest/review/dream (macOS launchd, skipped on Linux)
-10. **shell-setup** — add `rin` to PATH (auto-detects zsh/bash/fish)
+1. `make check` — verify all prerequisites are installed
+2. `make setup` — create Python venv + install packages
+3. `make install-db` — start PostgreSQL via Docker (PG17 + pgvector + AGE)
+4. `make memory-go` — build Go memory server
+5. `make pull-model` — start Ollama + pull embedding model (~670MB)
+6. `make sync-mcp` — register MCP server in `~/.claude.json`
+7. `make install-statusline` — install Claude Code statusline (usage + memory count)
+8. `make install-harness-global` — deploy agents/skills/commands to `~/.claude/` (available in all projects)
+9. `make install-cron` — register session harvest/review/dream (macOS launchd, skipped on Linux)
+10. `make shell-setup` — add `rin` to PATH (auto-detects zsh/bash/fish)
 
 ### 3. Launch
 

@@ -47,16 +47,16 @@ make install
 ```
 
 実行順序:
-1. **check** — 前提条件の確認
-2. **setup** — Python venv作成 + パッケージインストール
-3. **install-db** — DockerでPostgreSQL起動 (PG17 + pgvector + AGE)
-4. **memory-go** — Goメモリサーバービルド
-5. **pull-model** — Ollama起動 + 埋め込みモデルプル (~670MB)
-6. **sync-mcp** — MCPサーバーを`~/.claude.json`に登録
-7. **install-statusline** — Claude Codeステータスラインをインストール (使用量 + メモリカウント)
-8. **install-harness-global** — エージェント/スキル/コマンドを`~/.claude/`にデプロイ (全プロジェクトで使用可能)
-9. **install-cron** — セッション収集/レビュー/整理を登録 (macOS launchd、Linuxではスキップ)
-10. **shell-setup** — `rin`をPATHに追加 (zsh/bash/fish自動検出)
+1. `make check` — 前提条件の確認
+2. `make setup` — Python venv作成 + パッケージインストール
+3. `make install-db` — DockerでPostgreSQL起動 (PG17 + pgvector + AGE)
+4. `make memory-go` — Goメモリサーバービルド
+5. `make pull-model` — Ollama起動 + 埋め込みモデルプル (~670MB)
+6. `make sync-mcp` — MCPサーバーを`~/.claude.json`に登録
+7. `make install-statusline` — Claude Codeステータスラインをインストール (使用量 + メモリカウント)
+8. `make install-harness-global` — エージェント/スキル/コマンドを`~/.claude/`にデプロイ (全プロジェクトで使用可能)
+9. `make install-cron` — セッション収集/レビュー/整理を登録 (macOS launchd、Linuxではスキップ)
+10. `make shell-setup` — `rin`をPATHに追加 (zsh/bash/fish自動検出)
 
 ### 3. 起動
 
