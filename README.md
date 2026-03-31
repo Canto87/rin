@@ -117,9 +117,9 @@ scripts/
   session-picker.py      #   interactive session selector
   session-harvest.py     #   JSONL → markdown (launchd)
   session-review.sh      #   RIN-powered summarization (launchd)
-  rin-memory-recall.py   #   memory → system prompt injection
+  memory-dream.sh        #   memory consolidation (launchd)
   sync-mcp.py            #   MCP config → ~/.claude.json
-  migrate-to-pg.py       #   SQLite → PostgreSQL migration
+  sync-harness.sh        #   deploy harness to other projects or globally
 context/
   rin-context.md         #   identity, principles, decision boundaries
 launchd/                 #   macOS agent plists (templated)
@@ -187,7 +187,7 @@ rin --resume <session-id>    # resume a specific session
 
 RIN remembers across sessions. Decisions, error patterns, and preferences are stored in memory and automatically recalled on next launch.
 
-### Built-in Skills & Commands
+### Built-in Commands
 
 ```bash
 /commit          # auto-grouped commits with meaningful messages
@@ -195,7 +195,48 @@ RIN remembers across sessions. Decisions, error patterns, and preferences are st
 /code-review     # weighted code review of current changes
 ```
 
-These are defined in `.claude/commands/` and delegate to skills in `.claude/skills/`.
+Commands are defined in `.claude/commands/` and delegate to agents or skills in `.claude/`.
+
+### Agents
+
+Agents are autonomous workers that can be spawned by RIN or by each other.
+
+| Agent | Role |
+|-------|------|
+| `code-edit` | General-purpose code modification. Reads files → plans → edits → verifies build/tests. |
+| `code-review` | Read-only code review. Outputs a 10-point score report on quality, security, patterns. |
+| `validate` | Dual-mode validation. (1) Design doc vs checklist consistency. (2) Implementation vs acceptance criteria. |
+
+### Skills
+
+Skills are reusable workflows that agents and commands invoke.
+
+| Skill | What it does |
+|-------|-------------|
+| `auto-impl` | Phase orchestrator. Reads design docs, executes implementation phases with build/test gates. |
+| `auto-research` | Autonomous experiment loop. Hypothesize → modify code → measure → iterate until target met. |
+| `plan-feature` | Interactive design document generator. Produces phase-based plans with acceptance criteria. |
+| `smart-commit` | Analyzes changes, auto-groups by layer/type/feature, creates multiple semantic commits. |
+| `create-pr` | Auto-generates PR with summary, change analysis, and test plan from commits. |
+| `qa-gate` | Quality gate. Runs code-review + validate in parallel, evaluates combined scores. |
+| `gc` | Garbage collection. Scans for dead code, pattern drift, duplication, stale artifacts. |
+| `troubleshoot` | 5-stage diagnostic pipeline: symptom → hypothesis → code verification → self-refutation → fix. |
+
+### Workflow Example
+
+```
+  User: "Add rate limiting to the API"
+   │
+   ├─ /plan-feature          # generate design doc with phases
+   │   └─ docs/plans/rate-limiting.md
+   │
+   ├─ /auto-impl             # execute each phase
+   │   ├─ code-edit agent    #   implement changes
+   │   └─ qa-gate            #   review + validate per phase
+   │
+   ├─ /commit                # auto-group into semantic commits
+   └─ /pr                    # create PR with full context
+```
 
 ### Deploying to Other Projects
 

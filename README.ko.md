@@ -117,9 +117,9 @@ scripts/
   session-picker.py      #   대화형 세션 선택기
   session-harvest.py     #   JSONL → 마크다운 (launchd)
   session-review.sh      #   린이 요약 (launchd)
-  rin-memory-recall.py   #   기억 → 시스템 프롬프트 주입
+  memory-dream.sh        #   메모리 정리/통합 (launchd)
   sync-mcp.py            #   MCP 설정 → ~/.claude.json
-  migrate-to-pg.py       #   SQLite → PostgreSQL 마이그레이션
+  sync-harness.sh        #   하네스를 다른 프로젝트 또는 글로벌 배포
 context/
   rin-context.md         #   정체성, 원칙, 판단 경계
 launchd/                 #   macOS 에이전트 plist (템플릿)
@@ -187,7 +187,7 @@ rin --resume <session-id>    # 특정 세션 이어하기
 
 린은 세션 간 기억을 유지합니다. 결정, 에러 패턴, 선호도가 메모리에 저장되고 다음 실행 시 자동으로 불러옵니다.
 
-### 내장 스킬 & 커맨드
+### 내장 커맨드
 
 ```bash
 /commit          # 의미 있는 메시지로 자동 그룹 커밋
@@ -195,7 +195,48 @@ rin --resume <session-id>    # 특정 세션 이어하기
 /code-review     # 현재 변경사항에 대한 가중치 기반 코드 리뷰
 ```
 
-`.claude/commands/`에 정의되어 있으며, `.claude/skills/`의 스킬에 위임합니다.
+커맨드는 `.claude/commands/`에 정의되어 있으며, `.claude/`의 에이전트나 스킬에 위임합니다.
+
+### 에이전트
+
+에이전트는 린이 또는 서로가 스폰할 수 있는 자율 워커입니다.
+
+| 에이전트 | 역할 |
+|---------|------|
+| `code-edit` | 범용 코드 수정. 파일 읽기 → 계획 → 편집 → 빌드/테스트 검증. |
+| `code-review` | 읽기 전용 코드 리뷰. 품질, 보안, 패턴 준수를 10점 만점으로 평가. |
+| `validate` | 이중 모드 검증. (1) 설계 문서 vs 체크리스트 일관성. (2) 구현 vs 수용 기준. |
+
+### 스킬
+
+스킬은 에이전트와 커맨드가 호출하는 재사용 가능한 워크플로우입니다.
+
+| 스킬 | 설명 |
+|------|------|
+| `auto-impl` | 페이즈 오케스트레이터. 설계 문서를 읽고 빌드/테스트 게이트와 함께 구현 페이즈 실행. |
+| `auto-research` | 자율 실험 루프. 가설 → 코드 수정 → 측정 → 목표 달성까지 반복. |
+| `plan-feature` | 대화형 설계 문서 생성기. 수용 기준이 포함된 페이즈 기반 계획 작성. |
+| `smart-commit` | 변경사항 분석, 레이어/타입/기능별 자동 그룹화, 복수 시맨틱 커밋 생성. |
+| `create-pr` | 커밋에서 요약, 변경 분석, 테스트 계획이 포함된 PR 자동 생성. |
+| `qa-gate` | 품질 게이트. code-review + validate를 병렬 실행, 결합 점수 평가. |
+| `gc` | 가비지 컬렉션. 데드 코드, 패턴 드리프트, 중복, 스테일 아티팩트 탐지. |
+| `troubleshoot` | 5단계 진단 파이프라인: 증상 → 가설 → 코드 검증 → 자기 반박 → 수정. |
+
+### 워크플로우 예시
+
+```
+  사용자: "API에 레이트 리미팅 추가"
+   │
+   ├─ /plan-feature          # 페이즈 기반 설계 문서 생성
+   │   └─ docs/plans/rate-limiting.md
+   │
+   ├─ /auto-impl             # 각 페이즈 실행
+   │   ├─ code-edit 에이전트  #   변경사항 구현
+   │   └─ qa-gate            #   페이즈별 리뷰 + 검증
+   │
+   ├─ /commit                # 시맨틱 커밋으로 자동 그룹화
+   └─ /pr                    # 전체 맥락이 포함된 PR 생성
+```
 
 ### 다른 프로젝트에 배포
 
