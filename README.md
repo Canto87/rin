@@ -214,8 +214,17 @@ This copies `skill.md` files. Per-project `config.yaml` files are not overwritte
 ### Customization
 
 - **`context/rin-context.md`** — Behavioral principles and decision boundaries. Edit to change how RIN works.
+- **`context/rin-context-local.md`** — Environment-specific overrides (gitignored). Create this file to add local rules without modifying the shared context. Content is appended to the system prompt after `rin-context.md`.
 - **`.claude/skills/*/config.yaml`** — Per-skill configuration (thresholds, modes).
 - **`~/.rin/memory-config.json`** — Database DSN, Ollama URL overrides.
+
+Example `rin-context-local.md`:
+```markdown
+## Local Overrides
+- Always respond in Japanese.
+- Use Serena MCP for code navigation when available.
+- Default commit messages in English.
+```
 
 ## Commands
 

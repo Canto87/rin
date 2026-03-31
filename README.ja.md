@@ -215,8 +215,17 @@ make sync-harness TARGET=global
 ### カスタマイズ
 
 - **`context/rin-context.md`** — 行動原則と判断境界。RINの動作方式を変更するにはこのファイルを編集します。
+- **`context/rin-context-local.md`** — 環境別オーバーライド（gitignore）。共有コンテキストを変更せずにローカルルールを追加できます。`rin-context.md`の後にシステムプロンプトとして追加されます。
 - **`.claude/skills/*/config.yaml`** — スキル別設定（閾値、モード）。
 - **`~/.rin/memory-config.json`** — データベースDSN、Ollama URLオーバーライド。
+
+`rin-context-local.md`の例:
+```markdown
+## Local Overrides
+- Always respond in Japanese.
+- Use Serena MCP for code navigation when available.
+- Default commit messages in English.
+```
 
 ## コマンド
 
