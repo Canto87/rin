@@ -35,7 +35,7 @@ Extract from user message:
 Examples:
 - `/gc` → scan mode, all categories, full scope
 - `/gc fix` → fix mode, all categories
-- `/gc fix --module src/rin_memory --category dead-code` → fix dead code in rin_memory only
+- `/gc fix --module src/rin_memory_go --category dead-code` → fix dead code in rin_memory_go only
 - `/gc fix --dry-run` → show fix plan without applying
 - `/gc memory` → memory consolidation (rin-memory dream)
 - `/gc memory --kind active_task` → only clean up active_tasks

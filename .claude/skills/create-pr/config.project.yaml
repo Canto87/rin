@@ -77,34 +77,33 @@ detection:
     - "**/*.sql"
 
   query_changes:
-    - "src/rin_memory/store.py"
+    - "src/rin_memory_go/store.go"
 
   schema_or_query_changes:
     - "migrations/*.sql"
-    - "src/rin_memory/store.py"
+    - "src/rin_memory_go/store.go"
 
   ui_changes: []
 
   daemon_changes: []
 
   entity_changes:
-    - "src/rin_memory/*.py"
+    - "src/rin_memory_go/*.go"
 
   api_changes:
-    - "src/rin_memory/server.py"
+    - "src/rin_memory_go/tools_memory.go"
     - "src/rin_proxy/*.go"
 
   test_changes:
-    - "tests/**"
-    - "**/*_test.py"
+    - "src/rin_memory_go/*_test.go"
     - "**/*_test.go"
 
 # Layer detection for impact analysis
 layers:
   - name: "MCP Server"
-    path: "src/rin_memory/"
+    path: "src/rin_memory_go/"
     impact: "high"
-    description: "Memory MCP server"
+    description: "Memory MCP server (Go)"
 
   - name: "Proxy"
     path: "src/rin_proxy/"

@@ -6,7 +6,7 @@
 layers:
   - name: "MCP Server"
     paths:
-      - "src/rin_memory/"
+      - "src/rin_memory_go/"
     priority: 1
 
   - name: "Proxy"

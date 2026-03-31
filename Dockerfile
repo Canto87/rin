@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip python3-venv python3-dev \
+    python3 python3-pip python3-venv \
     build-essential git curl wget ca-certificates \
     postgresql-client-common postgresql-client \
     && rm -rf /var/lib/apt/lists/*

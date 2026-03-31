@@ -3,7 +3,7 @@
 
 project:
   name: "project-rin"
-  language: python  # go | python | typescript | java | rust | other
+  language: go  # go | python | typescript | java | rust | other
 
 paths:
   source: "src"         # Source code path
@@ -12,11 +12,11 @@ paths:
 # Integration layers for Q&A integration question
 integrations:
   - label: "MCP Server"
-    description: "FastMCP tool definitions (src/rin_memory/server.py)"
-    path: "src/rin_memory"
+    description: "Go MCP server with memory tools (src/rin_memory_go/)"
+    path: "src/rin_memory_go"
   - label: "Storage"
-    description: "LanceDB + PostgreSQL data layer (src/rin_memory/store.py)"
-    path: "src/rin_memory/store.py"
+    description: "PostgreSQL + pgvector storage (src/rin_memory_go/store.go)"
+    path: "src/rin_memory_go/store.go"
   - label: "Proxy"
     description: "Go reverse proxy for API routing (src/rin_proxy/)"
     path: "src/rin_proxy"

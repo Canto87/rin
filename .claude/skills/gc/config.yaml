@@ -3,7 +3,7 @@
 
 project:
   name: "project-rin"
-  language: python
+  language: go
 
 scan:
   include:

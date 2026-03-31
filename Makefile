@@ -41,9 +41,8 @@ check:  ## Check prerequisites (Python 3.11+, Go 1.26+, Docker, Ollama, Claude C
 
 # ── Setup ────────────────────────────────────────────────
 
-setup: check  ## Create venv + install packages
+setup: check  ## Create Python venv (for session scripts)
 	python3 -m venv .venv
-	.venv/bin/pip install -e ".[dev]"
 
 serve-ollama:  ## Start Ollama server (background)
 	@command -v ollama >/dev/null 2>&1 || { echo "ollama not found"; exit 1; }

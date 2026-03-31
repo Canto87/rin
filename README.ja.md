@@ -48,7 +48,7 @@ make install
 
 実行順序:
 1. `make check` — 前提条件の確認
-2. `make setup` — Python venv作成 + パッケージインストール
+2. `make setup` — Python venv作成（セッションスクリプト用）
 3. `make install-db` — DockerでPostgreSQL起動 (PG17 + pgvector + AGE)
 4. `make memory-go` — Goメモリサーバービルド
 5. `make pull-model` — Ollama起動 + 埋め込みモデルプル (~670MB)
@@ -241,7 +241,7 @@ make test               Dockerで全パイプラインテスト (8ステップ)
 
 ```
 make check              前提条件の確認 (Python, Go, Docker, Ollama)
-make setup              venv + パッケージインストール
+make setup              Python venv作成（セッションスクリプト用）
 make install-db         DockerでPostgreSQL起動 (PG17 + pgvector + AGE)
 make memory-go          Goメモリサーバーのビルド
 make proxy              Goプロキシのビルド

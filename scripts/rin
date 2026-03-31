@@ -85,8 +85,6 @@ echo ""
 RECALL=""
 if [ -x "$GO_BIN" ]; then
   RECALL=$("$GO_BIN" recall 2>/dev/null)
-elif command -v python3 >/dev/null 2>&1; then
-  RECALL=$(python3 "$RIN_HOME/scripts/rin-memory-recall.py" 2>/dev/null)
 fi
 
 RIN_CTX_LOCAL="$RIN_HOME/context/rin-context-local.md"

@@ -47,7 +47,7 @@ make install
 
 실행 순서:
 1. `make check` — 전제조건 확인
-2. `make setup` — Python venv 생성 + 패키지 설치
+2. `make setup` — Python venv 생성 (세션 스크립트용)
 3. `make install-db` — Docker로 PostgreSQL 시작 (PG17 + pgvector + AGE)
 4. `make memory-go` — Go 메모리 서버 빌드
 5. `make pull-model` — Ollama 시작 + 임베딩 모델 풀 (~670MB)
@@ -240,7 +240,7 @@ make test               Docker에서 전체 파이프라인 테스트 (8단계)
 
 ```
 make check              전제조건 확인 (Python, Go, Docker, Ollama)
-make setup              venv + 패키지 설치
+make setup              Python venv 생성 (세션 스크립트용)
 make install-db         Docker로 PostgreSQL 시작 (PG17 + pgvector + AGE)
 make memory-go          Go 메모리 서버 빌드
 make proxy              Go 프록시 빌드

@@ -47,7 +47,7 @@ make install
 
 This runs the following in order:
 1. `make check` — verify all prerequisites are installed
-2. `make setup` — create Python venv + install packages
+2. `make setup` — create Python venv (for session scripts)
 3. `make install-db` — start PostgreSQL via Docker (PG17 + pgvector + AGE)
 4. `make memory-go` — build Go memory server
 5. `make pull-model` — start Ollama + pull embedding model (~670MB)
@@ -231,7 +231,7 @@ Example `rin-context-local.md`:
 ### Core
 
 ```
-make install            Full install (venv + MCP + model + Docker PG + Go build + launchd + PATH)
+make install            Full install (venv + Docker PG + Go build + MCP + model + launchd + PATH)
 make rin                Launch RIN
 make test               Run full pipeline test in Docker (8 steps, zero config)
 ```
@@ -242,7 +242,7 @@ make test               Run full pipeline test in Docker (8 steps, zero config)
 
 ```
 make check              Check prerequisites (Python, Go, Docker, Ollama)
-make setup              Create venv + install packages
+make setup              Create Python venv (for session scripts)
 make install-db         Start PostgreSQL via Docker (PG17 + pgvector + AGE)
 make memory-go          Build Go memory server
 make proxy              Build Go proxy

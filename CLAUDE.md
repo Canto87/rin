@@ -5,18 +5,18 @@ RIN infrastructure project. Memory, session pipeline, execution environment.
 ## Structure
 
 ```
-src/rin_memory/     # MCP server (fastmcp) — long-term memory store/search
-  server.py         # MCP tool definitions (memory_*, routing_*)
-  store.py          # SQLite + LanceDB storage (legacy Python module)
-  embedding.py      # Ollama embeddings
-  ingest.py         # Markdown parsing/ingestion
-src/rin_memory_go/  # Go MCP server (primary) — PostgreSQL + pgvector + AGE
-  main.go           # MCP server entry, subcommands (recall, insert-log, reindex)
+src/rin_memory_go/  # MCP server (Go) — PostgreSQL + pgvector + AGE
+  main.go           # MCP server entry, subcommands (recall, insert-log, reindex, count)
   store.go          # PostgreSQL + pgvector storage
+  search.go         # Hybrid search (vector + FTS + RRF merge)
+  chunk.go          # Document chunking for embedding
   embed.go          # Ollama embeddings
+  graph.go          # AGE knowledge graph operations
+  ingest.go         # Markdown file parsing/ingestion
   config.go         # Config loader (~/.rin/memory-config.json)
   schema.sql        # Database schema (auto-applied on first connect)
   cmd_recall.go     # Session start memory recall
+  cmd_count.go      # Document count for statusline/banner
   tools_memory.go   # memory_* MCP tools
   tools_routing.go  # routing_* MCP tools
 src/rin_proxy/      # Go — Anthropic API ↔ Gemini API conversion proxy
@@ -39,7 +39,6 @@ scripts/
   session-harvest.py   # Session log collection (launchd 10min)
   session-review.sh    # Session transcript summarization + knowledge extraction (launchd 1h)
   memory-dream.sh      # Memory consolidation (launchd 24h)
-  rin-memory-recall.py # Load recent memory at session start
 context/
   rin-context.md    # RIN principles and decision boundaries (injected as system prompt)
 launchd/            # macOS launchd plist
@@ -47,12 +46,11 @@ launchd/            # macOS launchd plist
 
 ## Tech Stack
 
-- Python 3.11+, hatchling
-- fastmcp 2.0+ (MCP server)
+- Go 1.26+ (rin-memory-go MCP server, rin-proxy)
 - PostgreSQL 17+ (metadata + full-text) + pgvector (vector search) + AGE (knowledge graph)
-- Ollama (local embeddings)
-- Go 1.26+ (rin-memory-go, rin-proxy)
+- Ollama (local embeddings, mxbai-embed-large)
 - Docker (PostgreSQL hosting)
+- Python 3.11+ (session scripts only — harvest, picker)
 
 ## Commands
 
@@ -74,10 +72,15 @@ make sync-harness TARGET=<path>  # Deploy harness to another project
 ## Testing
 
 ```bash
-.venv/bin/pytest
-```
+# Unit tests (no DB required)
+cd src/rin_memory_go && go test -v ./...
 
-Linter: `ruff check src/`, Formatter: `ruff format src/`
+# Integration tests (requires Docker PostgreSQL)
+cd src/rin_memory_go && go test -tags=integration -v ./...
+
+# Full pipeline test in Docker
+make test
+```
 
 ## Harness (Agents / Skills / Commands)
 

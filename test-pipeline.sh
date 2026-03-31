@@ -23,11 +23,11 @@ echo "  RIN Installation Pipeline Test"
 echo "════════════════════════════════════════════════"
 echo ""
 
-# ── Step 1: Python venv + pip install ─────────────────
-echo "=== Step 1: Python setup (venv + pip install) ==="
-python3 -m venv .venv && .venv/bin/pip install -e ".[dev]" -q 2>&1 | tail -3
-if [ $? -eq 0 ]; then report 1 "Python setup (venv + pip install)" "PASS"
-else report 1 "Python setup (venv + pip install)" "FAIL"; fi
+# ── Step 1: Python available ──────────────────────────
+echo "=== Step 1: Python check ==="
+PY_VER=$(python3 --version 2>&1)
+if [ $? -eq 0 ]; then report 1 "Python available ($PY_VER)" "PASS"
+else report 1 "Python not found" "FAIL"; fi
 
 # ── Step 2: Go memory server build ───────────────────
 echo ""
@@ -87,12 +87,12 @@ else
     report 5 "Ollama embedding test (dim=$EMBED_DIM)" "FAIL"
 fi
 
-# ── Step 6: pytest ───────────────────────────────────
+# ── Step 6: Go unit tests ─────────────────────────────
 echo ""
-echo "=== Step 6: pytest ==="
-.venv/bin/pytest tests/ -v 2>&1
-if [ $? -eq 0 ]; then report 6 "pytest (all tests)" "PASS"
-else report 6 "pytest (all tests)" "FAIL"; fi
+echo "=== Step 6: Go unit tests ==="
+cd src/rin_memory_go && go test -v -count=1 ./... 2>&1 && cd /app
+if [ $? -eq 0 ]; then report 6 "Go unit tests" "PASS"
+else report 6 "Go unit tests" "FAIL"; fi
 
 # ── Step 7: scripts/rin banner check ─────────────────
 echo ""
