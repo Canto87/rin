@@ -96,7 +96,10 @@ install-statusline:  ## Install Claude Code statusline (usage + memory count)
 	json.dump(d, open(p, 'w'), indent=2)" 2>/dev/null
 	@echo "Installed: statusline (usage + memory count)"
 
-install: setup install-db memory-go pull-model sync-mcp install-statusline install-cron shell-setup  ## Full install
+install-harness-global:  ## Deploy harness (agents/skills/commands) to ~/.claude/
+	@./scripts/sync-harness.sh --global
+
+install: setup install-db memory-go pull-model sync-mcp install-statusline install-harness-global install-cron shell-setup  ## Full install
 	@mkdir -p $(HOME)/.rin
 	@echo ""
 	@echo "══════════════════════════════════════════════"

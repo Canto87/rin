@@ -53,8 +53,10 @@ make install
 4. **memory-go** — Goメモリサーバービルド
 5. **pull-model** — Ollama起動 + 埋め込みモデルプル (~670MB)
 6. **sync-mcp** — MCPサーバーを`~/.claude.json`に登録
-7. **install-cron** — セッション収集/レビュー/整理を登録 (macOS launchd、Linuxではスキップ)
-8. **shell-setup** — `rin`をPATHに追加 (zsh/bash/fish自動検出)
+7. **install-statusline** — Claude Codeステータスラインをインストール (使用量 + メモリカウント)
+8. **install-harness-global** — エージェント/スキル/コマンドを`~/.claude/`にデプロイ (全プロジェクトで使用可能)
+9. **install-cron** — セッション収集/レビュー/整理を登録 (macOS launchd、Linuxではスキップ)
+10. **shell-setup** — `rin`をPATHに追加 (zsh/bash/fish自動検出)
 
 ### 3. 起動
 

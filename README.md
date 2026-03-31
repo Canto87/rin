@@ -52,8 +52,10 @@ This runs the following in order:
 4. **memory-go** — build Go memory server
 5. **pull-model** — start Ollama + pull embedding model (~670MB)
 6. **sync-mcp** — register MCP server in `~/.claude.json`
-7. **install-cron** — register session harvest/review/dream (macOS launchd, skipped on Linux)
-8. **shell-setup** — add `rin` to PATH (auto-detects zsh/bash/fish)
+7. **install-statusline** — install Claude Code statusline (usage + memory count)
+8. **install-harness-global** — deploy agents/skills/commands to `~/.claude/` (available in all projects)
+9. **install-cron** — register session harvest/review/dream (macOS launchd, skipped on Linux)
+10. **shell-setup** — add `rin` to PATH (auto-detects zsh/bash/fish)
 
 ### 3. Launch
 
