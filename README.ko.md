@@ -8,7 +8,7 @@
   <code>╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝</code><br>
   <br>
   <strong>凛 — 맑고 또렷한</strong><br>
-  <sub>영속적 기억과 멀티 모델 라우팅을 가진 자율 개발 에이전트</sub>
+  <sub>Claude Code를 위한 하네스 엔지니어링 프레임워크</sub>
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 ---
 
-RIN은 [Claude Code](https://github.com/anthropics/claude-code) 위에 구축된 자율 개발 에이전트입니다. **영속적 장기 기억** (PostgreSQL + pgvector + AGE 그래프), **자동 세션 수확**, **멀티 모델 라우팅** (Gemini, GLM), **자기 정의 정체성**을 CLI에 결합하여 — 상태 없는 LLM을 과거 결정을 기억하고, 실수에서 배우고, 세션 간 맥락을 유지하는 지속적 협업자로 만듭니다.
+RIN은 [Claude Code](https://github.com/anthropics/claude-code)를 위한 하네스 엔지니어링 프레임워크입니다. 마크다운으로 정의된 **에이전트**, **스킬**, **커맨드** — 구조화된 제어 레이어를 추가하여 범용 AI를 재현 가능한 개발 워크플로우로 만듭니다. **영속적 기억** (PostgreSQL + pgvector + AGE 그래프)은 하네스가 세션을 넘어 학습하게 하고, **멀티 모델 라우팅** (Gemini, GLM)은 비용 효율적 팀 구성을 가능하게 합니다.
 
 ## 빠른 시작
 

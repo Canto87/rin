@@ -8,7 +8,7 @@
   <code>╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝</code><br>
   <br>
   <strong>凛 — Clear and resolute</strong><br>
-  <sub>Autonomous development agent with persistent memory and multi-model routing</sub>
+  <sub>Harness engineering framework for Claude Code</sub>
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 ---
 
-RIN is an autonomous development agent built on [Claude Code](https://github.com/anthropics/claude-code). It wraps the CLI with **persistent long-term memory** (PostgreSQL + pgvector + AGE graph), **automatic session harvesting**, **multi-model routing** (Gemini, GLM), and a **self-defined identity** — turning a stateless LLM into a continuous collaborator that remembers past decisions, learns from mistakes, and maintains context across sessions.
+RIN is a harness engineering framework for [Claude Code](https://github.com/anthropics/claude-code). It adds a structured control layer — **agents**, **skills**, and **commands** defined as markdown — that turns a general-purpose AI into repeatable development workflows. **Persistent memory** (PostgreSQL + pgvector + AGE graph) lets the harness learn across sessions, and **multi-model routing** (Gemini, GLM) enables cost-effective team composition.
 
 ## Quick Start
 

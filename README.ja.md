@@ -8,7 +8,7 @@
   <code>╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝</code><br>
   <br>
   <strong>凛 — 澄み切った判断</strong><br>
-  <sub>永続的な記憶とマルチモデルルーティングを備えた自律型開発エージェント</sub>
+  <sub>Claude Codeのためのハーネスエンジニアリングフレームワーク</sub>
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@
 
 ---
 
-RINは[Claude Code](https://github.com/anthropics/claude-code)上に構築された自律型開発エージェントです。**永続的な長期記憶**（PostgreSQL + pgvector + AGEグラフ）、**自動セッション収集**、**マルチモデルルーティング**（Gemini、GLM）、**自己定義されたアイデンティティ**をCLIに統合し、ステートレスなLLMを、過去の意思決定を記憶し、失敗から学び、セッション間でコンテキストを維持する継続的な協働者へと変えます。
+RINは[Claude Code](https://github.com/anthropics/claude-code)のためのハーネスエンジニアリングフレームワークです。Markdownで定義された**エージェント**、**スキル**、**コマンド** — 構造化された制御レイヤーを追加し、汎用AIを再現可能な開発ワークフローに変えます。**永続的メモリ**（PostgreSQL + pgvector + AGEグラフ）によりハーネスはセッションを越えて学習し、**マルチモデルルーティング**（Gemini、GLM）によりコスト効率的なチーム構成が可能です。
 
 ## クイックスタート
 
