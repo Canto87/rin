@@ -232,7 +232,8 @@ make sync-harness TARGET=global
 ```
 make install            フルインストール (venv + MCP + モデル + Docker PG + Goビルド + launchd + PATH)
 make rin                RINを起動
-make test               Dockerで全パイプラインテスト (8ステップ)
+make test               Dockerで全パイプラインテスト (ビルド + ユニットテスト + MCPサーバー)
+make test-install       Dockerでインストールパイプラインテスト (sync-mcp、ステータスライン、ハーネス、シェル設定)
 ```
 
 ### 個別ステップ

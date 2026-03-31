@@ -66,6 +66,9 @@ created_dirs=0
 configs_created=0
 
 sync_file() {
+    # Temporarily disable pipefail inside this function — head/tail close pipes
+    # early causing SIGPIPE (exit 141) with pipefail enabled.
+    set +o pipefail
     local src="$1"
     local dst="$2"
     local dst_dir="$(dirname "$dst")"
@@ -90,7 +93,10 @@ sync_file() {
         local clean
         clean="$(sed '1{/^<!-- Synced from project-rin/d;}' "$src" | sed '1{/^<!-- Managed by project-rin/d;}')"
 
-        if head -1 "$src" | grep -q '^---$' || echo "$clean" | head -1 | grep -q '^---$'; then
+        local first_line_src first_line_clean
+        first_line_src="$(head -1 "$src")"
+        first_line_clean="$(printf '%s' "$clean" | head -1)"
+        if [[ "$first_line_src" == "---" ]] || [[ "$first_line_clean" == "---" ]]; then
             # File has YAML frontmatter — insert marker after closing ---
             # to avoid breaking frontmatter parser
             local in_front=true
@@ -109,9 +115,9 @@ sync_file() {
 
             if [[ $front_end -gt 0 ]]; then
                 {
-                    echo "$clean" | head -n "$front_end"
+                    printf '%s\n' "$clean" | head -n "$front_end" || true
                     echo "$SYNC_MARKER"
-                    echo "$clean" | tail -n +"$((front_end + 1))"
+                    printf '%s\n' "$clean" | tail -n +"$((front_end + 1))" || true
                 } > "$dst"
             else
                 # Malformed frontmatter — prepend as fallback
@@ -123,6 +129,7 @@ sync_file() {
         fi
     fi
     synced=$((synced + 1))
+    set -o pipefail
 }
 
 # Copy config template if target doesn't have one

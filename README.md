@@ -233,7 +233,8 @@ Example `rin-context-local.md`:
 ```
 make install            Full install (venv + Docker PG + Go build + MCP + model + launchd + PATH)
 make rin                Launch RIN
-make test               Run full pipeline test in Docker (8 steps, zero config)
+make test               Run full pipeline test in Docker (build + unit tests + MCP server)
+make test-install       Run install pipeline test in Docker (sync-mcp, statusline, harness, shell-setup)
 ```
 
 ### Individual Steps

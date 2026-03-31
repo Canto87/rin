@@ -2,7 +2,7 @@
 	install-db uninstall-db install-cron uninstall-cron \
 	install-ollama uninstall-ollama \
 	proxy install-proxy uninstall-proxy cc help \
-	shell-setup memory-go sync-harness test install-statusline
+	shell-setup memory-go sync-harness test test-install install-statusline
 
 LAUNCH_AGENTS_DIR := $(HOME)/Library/LaunchAgents
 RIN_HOME := $(shell pwd)
@@ -221,8 +221,11 @@ sync-harness:  ## Sync harness to target project (TARGET=<path>) or globally (TA
 
 # ── Test ─────────────────────────────────────────────────
 
-test:  ## Run full pipeline test in Docker (postgres + ollama + build + pytest)
+test:  ## Run full pipeline test in Docker (build + unit tests + MCP server)
 	@docker compose up --build --abort-on-container-exit --exit-code-from app
+
+test-install:  ## Run install pipeline test in Docker (sync-mcp, statusline, harness, shell-setup)
+	@docker compose up --build --abort-on-container-exit --exit-code-from app-install
 
 # ── Help ─────────────────────────────────────────────────
 

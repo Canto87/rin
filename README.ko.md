@@ -231,7 +231,8 @@ make sync-harness TARGET=global
 ```
 make install            전체 설치 (venv + MCP + 모델 + Docker PG + Go 빌드 + launchd + PATH)
 make rin                린 실행
-make test               Docker에서 전체 파이프라인 테스트 (8단계)
+make test               Docker에서 전체 파이프라인 테스트 (빌드 + 단위 테스트 + MCP 서버)
+make test-install       Docker에서 인스톨 파이프라인 테스트 (sync-mcp, 상태표시줄, 하네스, 쉘 설정)
 ```
 
 ### 개별 단계

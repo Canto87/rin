@@ -43,6 +43,18 @@ services:
       RIN_PROJECT: "test-pipeline"
       RIN_HOME: "/app"
 
+  app-install:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      RIN_MEMORY_DSN: "postgres://postgres:postgres@postgres:5432/rin_memory"
+      RIN_HOME: "/app"
+    command: ["/app/test-install.sh"]
+
 volumes:
   pgdata:
   ollama_data:
