@@ -1,12 +1,17 @@
 #!/bin/bash
 # sync-harness.sh — Sync harness files from project-rin to target project
-# Usage: ./scripts/sync-harness.sh [--dry-run] [--init] <target-project-path>
+# Usage: ./scripts/sync-harness.sh [--dry-run] [--init] [--global] <target-project-path>
 #
 # Syncs:
 #   agents/*.md                → target/.claude/agents/          (overwrite)
 #   skills/*/*.md              → target/.claude/skills/*/        (overwrite)
 #   skills/*/templates/*       → target/.claude/skills/*/templates/ (overwrite)
 #   commands/*.md              → target/.claude/commands/         (overwrite)
+#
+# --global:
+#   Deploy to ~/.claude/ instead of a project directory.
+#   Makes agents/skills/commands available across all projects.
+#   No <target-project-path> needed.
 #
 # --init:
 #   Also copies config templates (config.yaml, config.project.yaml) for skills
@@ -27,6 +32,7 @@ SYNC_STATE_FILE=".sync-state"
 
 DRY_RUN=false
 INIT=false
+GLOBAL=false
 TARGET=""
 
 # Parse args
@@ -34,20 +40,23 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --dry-run) DRY_RUN=true; shift ;;
         --init) INIT=true; shift ;;
+        --global) GLOBAL=true; shift ;;
         *) TARGET="$1"; shift ;;
     esac
 done
 
-if [[ -z "$TARGET" ]]; then
-    echo "Usage: $0 [--dry-run] [--init] <target-project-path>"
+if $GLOBAL; then
+    TARGET="$HOME"
+    TARGET_CLAUDE="$HOME/.claude"
+elif [[ -z "$TARGET" ]]; then
+    echo "Usage: $0 [--dry-run] [--init] [--global] <target-project-path>"
     exit 1
-fi
-
-TARGET_CLAUDE="$TARGET/.claude"
-
-if [[ ! -d "$TARGET" ]]; then
-    echo "Error: Target directory does not exist: $TARGET"
-    exit 1
+else
+    TARGET_CLAUDE="$TARGET/.claude"
+    if [[ ! -d "$TARGET" ]]; then
+        echo "Error: Target directory does not exist: $TARGET"
+        exit 1
+    fi
 fi
 
 # Counters

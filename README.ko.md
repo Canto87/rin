@@ -197,13 +197,17 @@ rin --resume <session-id>    # 특정 세션 이어하기
 
 ### 다른 프로젝트에 배포
 
-린의 하네스(에이전트, 스킬, 커맨드)를 다른 프로젝트에 배포할 수 있습니다:
+린의 하네스(에이전트, 스킬, 커맨드)를 프로젝트별 또는 글로벌로 배포할 수 있습니다:
 
 ```bash
+# 프로젝트별 — target/.claude/에 복사
 make sync-harness TARGET=~/workspace/other-project
+
+# 글로벌 — ~/.claude/에 복사, 모든 프로젝트에서 사용 가능
+make sync-harness TARGET=global
 ```
 
-`skill.md` 파일만 복사됩니다. 프로젝트별 `config.yaml`은 덮어쓰지 않습니다.
+`skill.md` 파일만 복사됩니다. 프로젝트별 `config.yaml`은 덮어쓰지 않습니다. 여러 프로젝트에서 린의 하네스를 사용한다면 글로벌 배포를 권장합니다.
 
 ### 커스터마이즈
 

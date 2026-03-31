@@ -206,9 +206,16 @@ uninstall-proxy:  ## Remove rin-proxy launchd agent
 
 # ── Harness ──────────────────────────────────────────────
 
-sync-harness:  ## Sync harness (agents/skills/commands) to target project (TARGET=<path>)
-	@test -n "$(TARGET)" || { echo "Usage: make sync-harness TARGET=<project-path>"; exit 1; }
-	@./scripts/sync-harness.sh "$(TARGET)"
+sync-harness:  ## Sync harness to target project (TARGET=<path>) or globally (TARGET=global)
+	@if [ "$(TARGET)" = "global" ]; then \
+		./scripts/sync-harness.sh --global; \
+	elif [ -n "$(TARGET)" ]; then \
+		./scripts/sync-harness.sh "$(TARGET)"; \
+	else \
+		echo "Usage: make sync-harness TARGET=<project-path>"; \
+		echo "       make sync-harness TARGET=global"; \
+		exit 1; \
+	fi
 
 # ── Test ─────────────────────────────────────────────────
 

@@ -197,13 +197,17 @@ These are defined in `.claude/commands/` and delegate to skills in `.claude/skil
 
 ### Deploying to Other Projects
 
-RIN's harness (agents, skills, commands) can be deployed to any project:
+RIN's harness (agents, skills, commands) can be deployed per-project or globally:
 
 ```bash
+# Per-project — copies to target/.claude/
 make sync-harness TARGET=~/workspace/other-project
+
+# Global — copies to ~/.claude/, available in all projects
+make sync-harness TARGET=global
 ```
 
-This copies `skill.md` files. Per-project `config.yaml` files are not overwritten.
+This copies `skill.md` files. Per-project `config.yaml` files are not overwritten. Global deploy is recommended if you use RIN's harness across multiple projects.
 
 ### Customization
 
