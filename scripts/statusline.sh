@@ -52,10 +52,33 @@ if [ -f "$CACHE_FILE" ]; then
     fi
 fi
 
+LOCK_FILE="${CACHE_FILE}.lock"
 if [ -z "$usage_json" ] || [ "$usage_json" = "null" ]; then
-    usage_json=$(fetch_usage)
-    if [ -n "$usage_json" ] && [ "$usage_json" != "null" ]; then
-        (umask 077 && echo "$usage_json" > "$CACHE_FILE")
+    # Remove stale lock (older than 10s — fetch should take <5s)
+    if [ -d "$LOCK_FILE" ]; then
+        if stat -f %m "$LOCK_FILE" >/dev/null 2>&1; then
+            lock_mtime=$(stat -f %m "$LOCK_FILE" 2>/dev/null || echo 0)
+        else
+            lock_mtime=$(stat -c %Y "$LOCK_FILE" 2>/dev/null || echo 0)
+        fi
+        [ $(($(date +%s) - lock_mtime)) -gt 10 ] && rmdir "$LOCK_FILE" 2>/dev/null
+    fi
+    if mkdir "$LOCK_FILE" 2>/dev/null; then
+        trap "rmdir '$LOCK_FILE' 2>/dev/null" EXIT
+        usage_json=$(fetch_usage)
+        if [ -n "$usage_json" ] && [ "$usage_json" != "null" ]; then
+            has_error=$(echo "$usage_json" | jq -r '.error // empty' 2>/dev/null)
+            if [ -z "$has_error" ]; then
+                (umask 077 && echo "$usage_json" > "$CACHE_FILE")
+            fi
+        fi
+        rmdir "$LOCK_FILE" 2>/dev/null
+        trap - EXIT
+    else
+        # Another process is fetching — use stale cache
+        if [ -f "$CACHE_FILE" ]; then
+            usage_json=$(cat "$CACHE_FILE")
+        fi
     fi
 fi
 
@@ -161,7 +184,8 @@ week_reset_str=""
 # ── Output ────────────────────────────────────────────
 
 # API error
-if [ "$five_hour_pct" = "0" ] && [ "$seven_day_pct" = "0" ] && { [ -z "$usage_json" ] || [ "$usage_json" = "null" ]; }; then
+api_error=$(echo "$usage_json" | jq -r '.error.type // empty' 2>/dev/null)
+if [ "$five_hour_pct" = "0" ] && [ "$seven_day_pct" = "0" ] && { [ -z "$usage_json" ] || [ "$usage_json" = "null" ] || [ -n "$api_error" ]; }; then
     if [ -n "$mem_count" ] && [ "$mem_count" != "?" ]; then
         printf "${CYAN}凛${RESET} ${DIM}%s${RESET} ${DIM}|${RESET} Ctx: ${ctx_color}%d%%${RESET} ${DIM}|${RESET} ${RED}Usage: API Error${RESET} ${DIM}|${RESET} ${DIM}記憶${RESET} ${CYAN}%s${RESET}" \
             "$model_name" "$context_pct" "$mem_count"
