@@ -84,14 +84,50 @@ Consult `routing_suggest` at task start (L2+). Run `memory_search` with relevant
 - Merge decisions
 
 ## Self-Learning
-- **Unfinished tasks**: Save via `memory_store(kind='active_task')` at session end. On completion, `memory_update(archive=True)`.
-- **Error patterns**: Save via `memory_store(kind='error_pattern')` when resolving non-trivial errors. Search first when errors occur.
-- **Operator preferences**: Save via `memory_store(kind='preference')` when recurring patterns are found. Check for duplicates before saving.
-- **Cross-project**: Save patterns that apply across projects with `project='*'`.
-- **Decision tracking**: Before saving arch_decision, check existing decisions via `memory_search`. On conflict, use `memory_relate(supersedes)`. Tag with `confidence:high/medium/low`. Bad decisions get `outcome:negative`.
-- **Post-compact restore**: Load in-progress tasks via `memory_search(kind='active_task')`.
-- **Plan saving**: Save via `memory_store` after plan approval, before implementation.
-- **Failure -> rule promotion**: When failure occurs due to not searching memory, save as `error_pattern(tags=['memory-miss'])`. If the same type repeats twice, add the trigger to workflow rules.
+
+### Auto-save triggers (role separation with Claude Code auto memory)
+
+Claude Code auto memory (~/.claude/projects/*/memory/) handles project-scoped lightweight notes (feedback, preferences, project state).
+rin-memory handles **cross-project persistent knowledge** — do NOT duplicate what auto memory already stores.
+
+**Immediate save (no judgment needed — execute when condition is met):**
+| Condition | kind | Notes |
+|-----------|------|-------|
+| Resolved a non-trivial error | `error_pattern` | symptom/cause/fix structure |
+| Made an architecture or design decision | `arch_decision` | `memory_search` first, `supersedes` on conflict |
+| Plan was approved | `arch_decision` | Save before implementation |
+| Session ending with unfinished work | `active_task` | `archive=True` on completion |
+| Operator says "remember this" | appropriate kind | Save immediately |
+
+**Save on detection (save when pattern is recognized):**
+| Detected pattern | kind | Notes |
+|------------------|------|-------|
+| Operator repeats same instruction 2+ times | `preference` | Check duplicates first |
+| Operator corrects approach ("not that", "do it this way") | `preference` | Also in auto memory if project-scoped, rin-memory if cross-project |
+| Non-obvious external service behavior discovered | `domain_knowledge` | API quirks, config gotchas |
+| Recurring team workflow pattern | `team_pattern` | Tool/workflow related |
+
+**Do NOT save (auto memory territory):**
+- Simple user preferences (tone, response length) → auto memory
+- Project-specific state (current branch, in-progress PR) → auto memory
+- Context valid only for current session → no save needed
+
+### Auto-search triggers (execute when condition is met)
+
+| Condition | Search method |
+|-----------|---------------|
+| Error occurs | `memory_search(error keywords, kind='error_pattern')` |
+| Starting code modification | Search by task keywords + target module → then read code |
+| Architecture decision needed | `memory_search(module name, kind='arch_decision')` |
+| Post-compact restore | `memory_search(kind='active_task')` |
+| "I think I've done this before" feeling | Search |
+| **Never skip search because "it's probably not in memory"** | Search even when confident |
+
+### Storage quality rules
+- Cross-project patterns: save with `project='*'`
+- `confidence:high/medium/low` tag required (arch_decision)
+- Bad decisions get `outcome:negative` tag
+- Failure → rule promotion: on memory-miss failure, save as `error_pattern(tags=['memory-miss'])`. If same type repeats twice, add trigger to workflow rules
 
 ## Memory
 - When calling `memory_store`, **always** pass `project=project_slug`.
