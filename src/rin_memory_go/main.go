@@ -29,6 +29,12 @@ func main() {
 		case "count":
 			runCount()
 			return
+		case "query-preferences":
+			runQueryPreferences()
+			return
+		case "pre-skill-hook":
+			runPreSkillHook()
+			return
 		}
 	}
 
