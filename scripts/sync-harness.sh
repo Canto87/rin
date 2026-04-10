@@ -6,6 +6,7 @@
 #   agents/*.md                → target/.claude/agents/          (overwrite)
 #   skills/*/*.md              → target/.claude/skills/*/        (overwrite)
 #   skills/*/templates/*       → target/.claude/skills/*/templates/ (overwrite)
+#   skills/*/references/*      → target/.claude/skills/*/references/ (overwrite)
 #   commands/*.md              → target/.claude/commands/         (overwrite)
 #
 # --global:
@@ -188,13 +189,15 @@ for skill_dir in "$SOURCE_DIR"/skills/*/; do
         sync_file "$f" "$TARGET_CLAUDE/skills/$skill_name/$(basename "$f")"
     done
 
-    # Sync templates/ subdirectory if exists
-    if [[ -d "$skill_dir/templates" ]]; then
-        for f in "$skill_dir"templates/*; do
-            [[ -f "$f" ]] || continue
-            sync_file "$f" "$TARGET_CLAUDE/skills/$skill_name/templates/$(basename "$f")"
-        done
-    fi
+    # Sync templates/ and references/ subdirectories if they exist
+    for subdir in templates references; do
+        if [[ -d "$skill_dir/$subdir" ]]; then
+            for f in "$skill_dir$subdir"/*; do
+                [[ -f "$f" ]] || continue
+                sync_file "$f" "$TARGET_CLAUDE/skills/$skill_name/$subdir/$(basename "$f")"
+            done
+        fi
+    done
 done
 
 # 3. Sync commands (exclude rin/ subdirectory)

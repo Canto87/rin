@@ -213,6 +213,7 @@ Skills are reusable workflows that agents and commands invoke.
 
 | Skill | What it does |
 |-------|-------------|
+| `ideate` | Pre-planning ideation. Explores vague ideas through cognitive lenses (SCAMPER, Six Hats, etc.) and produces a Feature Brief for plan-feature. |
 | `auto-impl` | Phase orchestrator. Reads design docs, executes implementation phases with build/test gates. |
 | `auto-research` | Autonomous experiment loop. Hypothesize → modify code → measure → iterate until target met. |
 | `plan-feature` | Interactive design document generator. Produces phase-based plans with acceptance criteria. |
@@ -225,10 +226,13 @@ Skills are reusable workflows that agents and commands invoke.
 ### Workflow Example
 
 ```
-  User: "Add rate limiting to the API"
+  User: "I want something like rate limiting"
+   │
+   ├─ /ideate                # explore approaches, produce Feature Brief
+   │   └─ docs/ideation/rate-limiting/brief.md
    │
    ├─ /plan-feature          # generate design doc with phases
-   │   └─ docs/plans/rate-limiting.md
+   │   └─ docs/plans/rate-limiting/
    │
    ├─ /auto-impl             # execute each phase
    │   ├─ code-edit agent    #   implement changes

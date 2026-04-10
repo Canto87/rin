@@ -1,0 +1,17 @@
+# ideate skill configuration
+# Project-specific settings for project-rin
+
+defaults:
+  depth: standard            # quick | standard | deep
+  confidence_threshold: 80   # percentage (64/80 points)
+
+lenses:
+  enabled:
+    - default
+    - scamper
+  optional:
+    - six-hats
+    - adjacent-possible
+
+paths:
+  output: "docs/ideation"    # Feature Brief output path

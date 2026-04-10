@@ -213,6 +213,7 @@ rin --resume <session-id>    # 특정 세션 이어하기
 
 | 스킬 | 설명 |
 |------|------|
+| `ideate` | 사전 기획 아이디에이션. 인지 렌즈(SCAMPER, Six Hats 등)로 막연한 아이디어를 탐색하고 plan-feature용 Feature Brief 생성. |
 | `auto-impl` | 페이즈 오케스트레이터. 설계 문서를 읽고 빌드/테스트 게이트와 함께 구현 페이즈 실행. |
 | `auto-research` | 자율 실험 루프. 가설 → 코드 수정 → 측정 → 목표 달성까지 반복. |
 | `plan-feature` | 대화형 설계 문서 생성기. 수용 기준이 포함된 페이즈 기반 계획 작성. |
@@ -225,10 +226,13 @@ rin --resume <session-id>    # 특정 세션 이어하기
 ### 워크플로우 예시
 
 ```
-  사용자: "API에 레이트 리미팅 추가"
+  사용자: "레이트 리미팅 같은 거 추가하고 싶어"
+   │
+   ├─ /ideate                # 접근법 탐색, Feature Brief 생성
+   │   └─ docs/ideation/rate-limiting/brief.md
    │
    ├─ /plan-feature          # 페이즈 기반 설계 문서 생성
-   │   └─ docs/plans/rate-limiting.md
+   │   └─ docs/plans/rate-limiting/
    │
    ├─ /auto-impl             # 각 페이즈 실행
    │   ├─ code-edit 에이전트  #   변경사항 구현

@@ -96,6 +96,7 @@ RIN's harness infrastructure. project-rin is the canonical source, deployed to o
 ### Skills (`.claude/skills/`)
 | Skill | Role | Config |
 |-------|------|--------|
+| `ideate` | Pre-planning ideation (diverge → converge → Feature Brief) | `config.yaml` |
 | `auto-impl` | Phase orchestrator | `config.yaml` |
 | `auto-research` | Autonomous experiment loop (karpathy/autoresearch pattern) | `config.yaml` |
 | `plan-feature` | Interactive design document generation | `config.yaml` |
