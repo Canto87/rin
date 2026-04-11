@@ -3,12 +3,12 @@
 # Shows: Model | Ctx% | Session usage | Week usage | Memory doc count
 # Usage data comes from Claude Code's stdin JSON (rate_limits field).
 
-RED='\033[31m'
-YELLOW='\033[33m'
-GREEN='\033[32m'
-CYAN='\033[36m'
-DIM='\033[2m'
-RESET='\033[0m'
+RED=$'\033[31m'
+YELLOW=$'\033[33m'
+GREEN=$'\033[32m'
+CYAN=$'\033[36m'
+DIM=$'\033[2m'
+RESET=$'\033[0m'
 
 input=$(cat)
 
