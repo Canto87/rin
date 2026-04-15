@@ -1,0 +1,8 @@
+# dream skill configuration
+# Project-specific settings for memory consolidation
+
+prune_after_days: 90        # archive session_summaries older than this
+min_tags: 3                 # enrich memories with fewer tags
+drift_check: true           # verify file path references still exist
+index_max_lines: 200        # MEMORY.md line limit
+index_max_kb: 25            # MEMORY.md size limit

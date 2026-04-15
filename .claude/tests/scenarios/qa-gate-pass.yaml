@@ -1,0 +1,9 @@
+name: qa-gate-pass
+skill: qa-gate
+signals:
+  review_score: 8
+  validate_score: 9
+  has_critical: false
+  retry_count: 0
+expected:
+  action: pass

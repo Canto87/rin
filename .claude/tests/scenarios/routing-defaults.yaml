@@ -1,0 +1,6 @@
+name: routing-defaults
+skill: routing
+signals:
+  file_count: 4
+expected:
+  action: ok

@@ -32,7 +32,7 @@ var goldenTests = []goldenTest{
 	{query: "RRF score cosine similarity threshold blocking all results", expected: []string{"9286c73a29fe"}, note: "error: RRF score range mismatch"},
 	{query: "Haiku Sonnet model upgrade timeout insufficient", expected: []string{"27da4d9a06b9"}, note: "error: model upgrade timeout"},
 	{query: "Xcode license build blocked cgo", expected: []string{"07cbe0fa7123"}, note: "error: Xcode license block"},
-	{query: "letter_read timezone aware naive datetime comparison", expected: []string{"e3824c348718"}, note: "error: timezone comparison"},
+	{query: "timezone aware naive datetime comparison UTC offset", expected: []string{"e3824c348718"}, note: "error: timezone comparison"},
 
 	// ===== Architecture Decisions (check existing decisions when designing) =====
 	{query: "thinking loop timeout cycle 300s round counter", expected: []string{"1506976bfa45"}, note: "arch: thinking loop timeout"},

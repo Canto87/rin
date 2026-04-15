@@ -1,0 +1,70 @@
+# Harness Policy — decision rules for all skills/agents
+# Distributed via sync-harness. Override per project with policy.project.yaml.
+#
+# Schema rules:
+# - condition blocks are structured for compatibility with the Phase 3 Go engine
+# - simple values use key-value, conditional branching uses condition tree
+# - version field supports schema evolution
+
+version: 1
+
+qa-gate:
+  pass:
+    condition:
+      and:
+        - { field: review_score, op: ">=", value: 7 }
+        - { field: validate_score, op: ">=", value: 7 }
+        - { field: has_critical, op: "==", value: false }
+    action: pass
+  retry:
+    condition:
+      and:
+        - or:
+            - { field: review_score, op: ">=", value: 5 }
+            - { field: validate_score, op: ">=", value: 5 }
+        - { field: retry_count, op: "<", value: 2 }
+    action: retry
+  reject:
+    action: reject
+
+code-edit:
+  build_retries: 2
+  test_retries: 1
+  max_cycles: 5
+  scope:
+    file: { max_files: 3 }
+    module: { max_files: 10 }
+    cross-module: { max_files: 20 }
+
+auto-impl:
+  max_turns: 20
+  on_build_fail: { action: retry, max: 1, then: stop }
+  on_scope_fail: { action: escalate_scope, max: 1, then: stop }
+  on_test_warn: { action: log_and_continue }
+
+routing:
+  l3_file_threshold: 3
+  l2_file_threshold: 2
+  score_weights:
+    success_rate: 0.7
+    speed: 0.3
+  confidence_base: 10
+  consecutive_fail_alert: 3
+
+gc:
+  severity:
+    critical: [GC-05]
+    warning: [GC-01, GC-02, GC-06]
+    info: [GC-03, GC-04]
+  memory_limit_per_run: 15
+  auto_trigger_on_commit: [GC-01, GC-04]
+
+failure:
+  classes:
+    - build_failure
+    - test_failure
+    - scope_exceeded
+    - context_overflow
+    - timeout
+    - merge_conflict
+    - dependency_error

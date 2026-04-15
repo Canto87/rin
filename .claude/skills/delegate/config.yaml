@@ -1,0 +1,2 @@
+# delegate skill configuration
+default_model: glm        # glm | codex | gemini

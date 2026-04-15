@@ -4,12 +4,103 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"gopkg.in/yaml.v3"
 )
+
+// routingPolicy holds routing-related values from policy.yaml.
+type routingPolicy struct {
+	L3FileThreshold    int     `yaml:"l3_file_threshold"`
+	L2FileThreshold    int     `yaml:"l2_file_threshold"`
+	SuccessRateWeight  float64 `yaml:"success_rate"`
+	SpeedWeight        float64 `yaml:"speed"`
+	ConfidenceBase     float64 `yaml:"confidence_base"`
+	ConsecutiveFailAlert int   `yaml:"consecutive_fail_alert"`
+}
+
+// loadRoutingPolicy reads the routing section from .claude/policy.yaml.
+// Returns defaults if the file is missing or unparseable.
+func loadRoutingPolicy() routingPolicy {
+	defaults := routingPolicy{
+		L3FileThreshold:    3,
+		L2FileThreshold:    2,
+		SuccessRateWeight:  0.7,
+		SpeedWeight:        0.3,
+		ConfidenceBase:     10,
+		ConsecutiveFailAlert: 3,
+	}
+
+	// Try to find policy.yaml by walking up from cwd.
+	path := findPolicyYAML()
+	if path == "" {
+		return defaults
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return defaults
+	}
+
+	var raw struct {
+		Routing struct {
+			L3FileThreshold    *int     `yaml:"l3_file_threshold"`
+			L2FileThreshold    *int     `yaml:"l2_file_threshold"`
+			ScoreWeights       *struct {
+				SuccessRate float64 `yaml:"success_rate"`
+				Speed       float64 `yaml:"speed"`
+			} `yaml:"score_weights"`
+			ConfidenceBase       *float64 `yaml:"confidence_base"`
+			ConsecutiveFailAlert *int     `yaml:"consecutive_fail_alert"`
+		} `yaml:"routing"`
+	}
+	if err := yaml.Unmarshal(data, &raw); err != nil {
+		return defaults
+	}
+
+	p := defaults
+	if raw.Routing.L3FileThreshold != nil {
+		p.L3FileThreshold = *raw.Routing.L3FileThreshold
+	}
+	if raw.Routing.L2FileThreshold != nil {
+		p.L2FileThreshold = *raw.Routing.L2FileThreshold
+	}
+	if raw.Routing.ScoreWeights != nil {
+		p.SuccessRateWeight = raw.Routing.ScoreWeights.SuccessRate
+		p.SpeedWeight = raw.Routing.ScoreWeights.Speed
+	}
+	if raw.Routing.ConfidenceBase != nil {
+		p.ConfidenceBase = *raw.Routing.ConfidenceBase
+	}
+	if raw.Routing.ConsecutiveFailAlert != nil {
+		p.ConsecutiveFailAlert = *raw.Routing.ConsecutiveFailAlert
+	}
+	return p
+}
+
+// findPolicyYAML walks up from cwd looking for .claude/policy.yaml.
+func findPolicyYAML() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+	for {
+		candidate := dir + "/.claude/policy.yaml"
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate
+		}
+		parent := dir[:strings.LastIndex(dir, "/")]
+		if parent == dir || parent == "" {
+			break
+		}
+		dir = parent
+	}
+	return ""
+}
 
 // levelDefaults maps complexity level to default routing config.
 var levelDefaults = map[string]struct {
@@ -23,11 +114,13 @@ var levelDefaults = map[string]struct {
 }
 
 // classifyLevel returns "L1", "L2", or "L3" based on inputs.
+// Thresholds are read from policy.yaml routing section.
 func classifyLevel(fileCount int, hasDependencies, needsDesign bool) string {
-	if hasDependencies || needsDesign || fileCount > 3 {
+	p := loadRoutingPolicy()
+	if hasDependencies || needsDesign || fileCount > p.L3FileThreshold {
 		return "L3"
 	}
-	if fileCount >= 2 {
+	if fileCount >= p.L2FileThreshold {
 		return "L2"
 	}
 	return "L1"
@@ -47,8 +140,10 @@ type routingLogEntry struct {
 	FallbackUsed bool     `json:"fallback_used,omitempty"`
 	FallbackFrom *string  `json:"fallback_from,omitempty"`
 	ErrorType    *string  `json:"error_type,omitempty"`
-	Project      string   `json:"project,omitempty"`
-	LoggedAt     string   `json:"logged_at"`
+	FailureClass *string `json:"failure_class,omitempty"`
+	PolicyRef    *string `json:"policy_ref,omitempty"`
+	Project      string  `json:"project,omitempty"`
+	LoggedAt     string  `json:"logged_at"`
 }
 
 // modelStats accumulates stats per model from routing logs.
@@ -85,10 +180,11 @@ func registerRoutingTools(server *mcp.Server, cfg *MemoryConfig, store *Store) {
 			project = *input.Project
 		}
 
-		// 3. Query recent routing logs.
+		// 3. Query recent routing logs (exclude self_report to avoid "model:current" pollution).
 		query := `
 			SELECT content FROM documents
 			WHERE kind = 'routing_log' AND NOT archived
+			  AND NOT (tags @> ARRAY['self_report']::text[])
 			ORDER BY created_at DESC LIMIT 20
 		`
 		var args []any
@@ -96,6 +192,7 @@ func registerRoutingTools(server *mcp.Server, cfg *MemoryConfig, store *Store) {
 			query = `
 				SELECT content FROM documents
 				WHERE kind = 'routing_log' AND NOT archived
+				  AND NOT (tags @> ARRAY['self_report']::text[])
 				  AND (project = $1 OR project IS NULL)
 				ORDER BY created_at DESC LIMIT 20
 			`
@@ -131,7 +228,8 @@ func registerRoutingTools(server *mcp.Server, cfg *MemoryConfig, store *Store) {
 			s.durations = append(s.durations, entry.DurationS)
 		}
 
-		// 5. Score models and pick best.
+		// 5. Score models and pick best (weights from policy.yaml).
+		rp := loadRoutingPolicy()
 		type scoredModel struct {
 			model string
 			score float64
@@ -151,7 +249,7 @@ func registerRoutingTools(server *mcp.Server, cfg *MemoryConfig, store *Store) {
 			if speedScore < 0 {
 				speedScore = 0
 			}
-			score := successRate*0.7 + speedScore*0.3
+			score := successRate*rp.SuccessRateWeight + speedScore*rp.SpeedWeight
 			scored = append(scored, scoredModel{m, score, s})
 		}
 		sort.Slice(scored, func(i, j int) bool {
@@ -163,7 +261,7 @@ func registerRoutingTools(server *mcp.Server, cfg *MemoryConfig, store *Store) {
 		for _, s := range statsMap {
 			totalLogs += s.total
 		}
-		confidence := float64(totalLogs) / 10.0
+		confidence := float64(totalLogs) / rp.ConfidenceBase
 		if confidence > 1.0 {
 			confidence = 1.0
 		}
@@ -211,6 +309,9 @@ func registerRoutingTools(server *mcp.Server, cfg *MemoryConfig, store *Store) {
 		Name:        "routing_log",
 		Description: "Log a routing decision result. Detects failure patterns.",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, input RoutingLogInput) (*mcp.CallToolResult, any, error) {
+		// 0. Load routing policy once for this handler invocation.
+		rp := loadRoutingPolicy()
+
 		// 1. Resolve level and project.
 		level := "L1"
 		if input.Level != nil {
@@ -240,6 +341,12 @@ func registerRoutingTools(server *mcp.Server, cfg *MemoryConfig, store *Store) {
 		if input.ErrorType != nil {
 			tags = append(tags, fmt.Sprintf("error:%s", *input.ErrorType))
 		}
+		if input.FailureClass != nil {
+			tags = append(tags, fmt.Sprintf("failure:%s", *input.FailureClass))
+		}
+		if len(input.ExtraTags) > 0 {
+			tags = append(tags, input.ExtraTags...)
+		}
 
 		// 4. Build content JSON.
 		entry := routingLogEntry{
@@ -255,6 +362,8 @@ func registerRoutingTools(server *mcp.Server, cfg *MemoryConfig, store *Store) {
 			FallbackUsed: input.FallbackUsed,
 			FallbackFrom: input.FallbackFrom,
 			ErrorType:    input.ErrorType,
+			FailureClass: input.FailureClass,
+			PolicyRef:    input.PolicyRef,
 			Project:      project,
 			LoggedAt:     time.Now().Format(time.RFC3339),
 		}
@@ -287,16 +396,17 @@ func registerRoutingTools(server *mcp.Server, cfg *MemoryConfig, store *Store) {
 			return textResult(fmt.Sprintf("error storing routing log: %v", err)), nil, nil
 		}
 
-		// 6. Consecutive failure detection on failed logs.
+		// 6. Consecutive failure detection on failed logs (threshold from policy.yaml).
 		if !input.Success {
+			failLimit := rp.ConsecutiveFailAlert
 			modelTag := fmt.Sprintf("model:%s", input.Model)
-			failRows, err := store.pool.Query(ctx, `
+			failRows, err := store.pool.Query(ctx, fmt.Sprintf(`
 				SELECT tags FROM documents
 				WHERE kind = 'routing_log'
 				  AND tags @> ARRAY[$1]::text[]
 				  AND NOT archived
-				ORDER BY created_at DESC LIMIT 3
-			`, modelTag)
+				ORDER BY created_at DESC LIMIT %d
+			`, failLimit), modelTag)
 			if err == nil {
 				allFail := true
 				count := 0
@@ -321,9 +431,9 @@ func registerRoutingTools(server *mcp.Server, cfg *MemoryConfig, store *Store) {
 				}
 				failRows.Close()
 
-				if allFail && count == 3 {
-					warnContent := fmt.Sprintf("%s has failed 3 consecutive times. Consider using a fallback model.", input.Model)
-					warnTitle := fmt.Sprintf("[Warning] %s consecutive failure detected", input.Model)
+				if allFail && count == failLimit {
+					warnContent := fmt.Sprintf("%s failed %d consecutive times. Consider using an alternative model.", input.Model, failLimit)
+					warnTitle := fmt.Sprintf("[alert] %s consecutive failure detected", input.Model)
 					warnTags := []string{"routing_alert", fmt.Sprintf("model:%s", input.Model)}
 					warnSource := "routing:" + time.Now().Format("2006-01-02")
 					warnSourcePtr := &warnSource

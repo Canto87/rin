@@ -1,0 +1,60 @@
+# usage-report skill configuration
+# Category definitions for Claude Code session classification
+
+output:
+  language: ja  # Report language (ja/ko/en)
+  default_period: week
+  default_format: text  # text, json, csv
+  min_turns: 2  # Minimum turns to include a session
+
+categories:
+  - major: コーディング
+    minor:
+      - 新機能実装
+      - リファクタリング
+      - テスト作成
+      - ボイラープレート生成
+      - 不具合修正
+
+  - major: 調査・理解
+    minor:
+      - 既存コード理解
+      - 影響範囲調査
+      - ライブラリ・依存関係調査
+      - 不具合調査
+      - 技術的質問
+
+  - major: レビュー・品質
+    minor:
+      - コードレビュー
+      - lint・ビルドエラー修正
+
+  - major: 設計・ドキュメント
+    minor:
+      - 設計相談
+      - 仕様書作成
+      - コミット・PR作成
+
+  - major: 運用・DevOps
+    minor:
+      - 設定ファイル編集
+      - マイグレーション作成
+      - SQL作成
+
+  - major: 分析・レポート
+    minor:
+      - データ分析
+      - レポート作成
+
+  - major: データ管理
+    minor:
+      - マスタデータ管理・入稿
+
+  - major: オーケストレーション
+    minor:
+      - 設計+実装指揮
+      - ツール・ハーネス構築
+
+  - major: その他
+    minor:
+      - その他

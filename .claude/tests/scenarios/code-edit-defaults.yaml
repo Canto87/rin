@@ -1,0 +1,7 @@
+name: code-edit-defaults
+skill: code-edit
+signals:
+  scope: file
+  file_count: 2
+expected:
+  action: ok

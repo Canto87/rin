@@ -1,0 +1,9 @@
+name: qa-gate-reject
+skill: qa-gate
+signals:
+  review_score: 3
+  validate_score: 2
+  has_critical: true
+  retry_count: 2
+expected:
+  action: reject

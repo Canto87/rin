@@ -1,0 +1,7 @@
+name: auto-impl-defaults
+skill: auto-impl
+signals:
+  result: build_fail
+  retry_count: 0
+expected:
+  action: ok

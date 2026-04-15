@@ -117,6 +117,9 @@ type RoutingLogInput struct {
 	FallbackUsed bool    `json:"fallback_used,omitempty"    jsonschema:"Whether fallback model was used"`
 	FallbackFrom *string  `json:"fallback_from,omitempty"   jsonschema:"Original model if fallback was used"`
 	ErrorType    *string  `json:"error_type,omitempty"       jsonschema:"Error category: timeout, quality, crash"`
+	FailureClass *string `json:"failure_class,omitempty"    jsonschema:"Failure classification: build_failure, test_failure, scope_exceeded, context_overflow, timeout, merge_conflict, dependency_error"`
+	PolicyRef    *string `json:"policy_ref,omitempty"       jsonschema:"Policy rule applied (e.g. qa-gate.pass, code-edit.build_retries)"`
+	ExtraTags    []string `json:"extra_tags,omitempty"       jsonschema:"Additional tags to append (e.g. self_report, tool_type:skill)"`
 	Project      *string  `json:"project,omitempty"          jsonschema:"Project scope"`
 }
 

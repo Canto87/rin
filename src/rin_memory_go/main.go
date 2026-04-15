@@ -32,6 +32,33 @@ func main() {
 		case "query-preferences":
 			runQueryPreferences()
 			return
+		case "post-skill-hook":
+			runPostSkillHook()
+			return
+		case "post-error-capture":
+			runPostErrorCapture()
+			return
+		case "post-agent-quality":
+			runPostAgentQuality()
+			return
+		case "post-session-summary":
+			runPostSessionSummary()
+			return
+		case "session-prime":
+			runSessionPrime()
+			return
+		case "promote-cross-project":
+			runPromoteCrossProject()
+			return
+		case "skill-health":
+			runSkillHealth()
+			return
+		case "skill-stats":
+			runSkillStats()
+			return
+		case "skill-report":
+			runSkillReport()
+			return
 		case "pre-skill-hook":
 			runPreSkillHook()
 			return
