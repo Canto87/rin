@@ -4,7 +4,7 @@
 
 RIN_HOME="${RIN_HOME:-$(cd "$(dirname "$0")/.." && pwd)}"
 HARVEST_STATE="$RIN_HOME/memory/.harvest-state.json"
-MAX_BATCH=5
+MAX_BATCH="${MAX_BATCH:-100}"
 
 if [ ! -f "$HARVEST_STATE" ]; then
   exit 0
@@ -60,6 +60,14 @@ Below are recent session transcripts. Read each transcript and:
 Use memory_search to check for duplicates against existing memories, then memory_store only new content.
 For sessions with nothing to extract, store only the session_summary.
 
+**IMPORTANT — created_at backfill for replayed sessions**:
+Each session header includes `[STARTED:<RFC3339>]`. When storing session_summary, active_task, arch_decision,
+domain_knowledge, team_pattern, or error_pattern, **always pass that STARTED value as the `created_at` parameter
+of memory_store**. This ensures retention policies (e.g. 90-day prune) operate on the actual session date rather
+than the review run time.
+
+Also set the `source` field to `session:<SID>` so entries can be traced/backfilled later.
+
 After processing each session, output the session title in the following format, one line per session (SID is in the header):
 REVIEW_TITLE|<SID>|<one-line title summarizing the entire session (60 chars max)>
 INSTRUCTIONS
@@ -68,8 +76,20 @@ for i in "${!notes_files[@]}"; do
   f="${notes_files[$i]}"
   sid="${session_ids[$i]}"
   full_path="$RIN_HOME/$f"
+  # Extract session start time from notes_path filename (e.g. 2026-02-24-183711.md → 2026-02-24T18:37:11+09:00)
+  basename=$(basename "$f" .md)
+  started_at=$("$RIN_HOME/.venv/bin/python" -c "
+import re, sys
+m = re.match(r'^(\d{4})-(\d{2})-(\d{2})-(\d{2})(\d{2})(\d{2})$', '$basename')
+if m:
+    print(f'{m.group(1)}-{m.group(2)}-{m.group(3)}T{m.group(4)}:{m.group(5)}:{m.group(6)}+09:00')
+" 2>/dev/null)
   if [ -f "$full_path" ]; then
-    echo "--- SESSION [SID:$sid]: $f ---" >> "$TMPFILE"
+    if [ -n "$started_at" ]; then
+      echo "--- SESSION [SID:$sid] [STARTED:$started_at]: $f ---" >> "$TMPFILE"
+    else
+      echo "--- SESSION [SID:$sid]: $f ---" >> "$TMPFILE"
+    fi
     head -c 15000 "$full_path" >> "$TMPFILE"
     echo "" >> "$TMPFILE"
   fi
