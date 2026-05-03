@@ -68,6 +68,9 @@ func main() {
 		case "prune-old-sessions":
 			runPruneOldSessions()
 			return
+		case "dedupe":
+			runDedupe()
+			return
 		}
 	}
 
