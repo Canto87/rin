@@ -36,9 +36,9 @@ scripts/
   sync-harness.sh   # Deploy harness files to other projects
   rin-team          # Team mode: Claude leader + provider teammates (tmux env isolation)
   rin-cc            # Team mode exit (tmux env removal)
-  session-harvest.py   # Session log collection (launchd 10min)
-  session-review.sh    # Session transcript summarization + knowledge extraction (launchd 1h)
-  memory-dream.sh      # Memory consolidation (launchd 24h)
+  session-harvest.py   # Session log collection (launchd, 10min interval)
+  session-review.sh    # Session transcript summarization + knowledge extraction (launchd, hourly :00)
+  memory-dream.sh      # Memory consolidation (launchd, daily 11:00)
 context/
   rin-context.md    # RIN principles and decision boundaries (injected as system prompt)
 launchd/            # macOS launchd plist

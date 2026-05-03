@@ -138,16 +138,22 @@ config/
 
 ### Memory Kinds
 
-| Kind | Description |
-|------|-------------|
-| `session_journal` | Session title + summary |
-| `arch_decision` | Architectural decisions with rationale |
-| `domain_knowledge` | External service quirks, troubleshooting |
-| `team_pattern` | Collaboration patterns, workflow rules |
-| `active_task` | Unfinished work carried across sessions |
-| `error_pattern` | Recurring error patterns and solutions |
-| `preference` | User preferences (workflow, tools, style) |
-| `routing_log` | Model routing performance data |
+| Kind | Description | Retention |
+|------|-------------|-----------|
+| `session_summary` | Per-session title + 2–3 sentence summary | 30 days |
+| `session_journal` | Free-form session journal entries | 30 days |
+| `routing_log` | Model routing performance data | 30 days |
+| `arch_decision` | Architectural decisions with rationale | persistent |
+| `domain_knowledge` | External service quirks, troubleshooting | persistent |
+| `team_pattern` | Collaboration patterns, workflow rules | persistent |
+| `active_task` | Unfinished work carried across sessions | persistent (archived when complete) |
+| `error_pattern` | Recurring error patterns and solutions | persistent |
+| `preference` | User preferences (workflow, tools, style) | persistent |
+
+Retention is enforced deterministically by the daily `memory-dream` pre-flight
+(no LLM judgment): time-bounded kinds older than the cutoff are archived.
+Persistent kinds accumulate but are deduped via cosine clustering — see
+[Manual operations](#manual-operations).
 
 ## Team Mode
 
@@ -308,6 +314,24 @@ make cc              Exit team mode
 make sync-harness       Deploy harness to another project (TARGET=<path>)
 make help               Show all targets
 ```
+
+### Manual operations
+
+Day-to-day, the daily `memory-dream` pre-flight handles retention automatically.
+The same passes are also invokable directly for inspection or one-off cleanup:
+
+```
+./src/rin_memory_go/rin-memory-go prune-routing-log
+./src/rin_memory_go/rin-memory-go prune-old-sessions
+./src/rin_memory_go/rin-memory-go dedupe -threshold 0.95               # dry-run
+./src/rin_memory_go/rin-memory-go dedupe -threshold 0.95 -apply        # commit
+./src/rin_memory_go/rin-memory-go dedupe -threshold 0.90 -exclude <id1>,<id2> -apply
+```
+
+`dedupe` uses pgvector cosine similarity to cluster near-duplicates within
+`arch_decision`/`domain_knowledge`/`error_pattern`/`team_pattern`, keeps the
+most recent doc, archives the rest, and records `supersedes` relations.
+`MAX_BATCH=N make review` is also useful when draining a session backlog.
 
 ### Optional
 
