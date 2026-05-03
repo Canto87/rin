@@ -142,11 +142,14 @@ func (s *Store) StoreDocument(ctx context.Context, input MemoryStoreInput) (stri
 		project = &proj
 	}
 
-	now := time.Now()
+	createdAt := time.Now()
+	if input.CreatedAt != nil {
+		createdAt = *input.CreatedAt
+	}
 	_, err = s.pool.Exec(ctx, `
 		INSERT INTO documents (id, kind, title, content, summary, tags, source, created_at, archived, project)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, false, $9)
-	`, docID, input.Kind, input.Title, input.Content, input.Summary, input.Tags, input.Source, now, project)
+	`, docID, input.Kind, input.Title, input.Content, input.Summary, input.Tags, input.Source, createdAt, project)
 
 	if err != nil {
 		return "", err

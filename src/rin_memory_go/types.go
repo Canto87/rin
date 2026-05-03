@@ -35,13 +35,14 @@ type SearchResult struct {
 // -- Tool input types --
 
 type MemoryStoreInput struct {
-	Kind    string   `json:"kind"    jsonschema:"Document type: session_journal, arch_decision, domain_knowledge, code_change, team_pattern, routing_log, active_task, error_pattern, preference"`
-	Title   string   `json:"title"   jsonschema:"Brief descriptive title"`
-	Content string   `json:"content" jsonschema:"Full content of the knowledge"`
-	Tags    []string `json:"tags,omitempty"    jsonschema:"Optional tags for structured lookup"`
-	Source  *string  `json:"source,omitempty"  jsonschema:"Origin reference (e.g. session:2026-02-21)"`
-	Summary *string  `json:"summary,omitempty" jsonschema:"Optional short summary for progressive disclosure"`
-	Project *string  `json:"project,omitempty" jsonschema:"Project scope. Use '*' for all projects"`
+	Kind      string     `json:"kind"    jsonschema:"Document type: session_journal, arch_decision, domain_knowledge, code_change, team_pattern, routing_log, active_task, error_pattern, preference"`
+	Title     string     `json:"title"   jsonschema:"Brief descriptive title"`
+	Content   string     `json:"content" jsonschema:"Full content of the knowledge"`
+	Tags      []string   `json:"tags,omitempty"    jsonschema:"Optional tags for structured lookup"`
+	Source    *string    `json:"source,omitempty"  jsonschema:"Origin reference (e.g. session:2026-02-21)"`
+	Summary   *string    `json:"summary,omitempty" jsonschema:"Optional short summary for progressive disclosure"`
+	Project   *string    `json:"project,omitempty" jsonschema:"Project scope. Use '*' for all projects"`
+	CreatedAt *time.Time `json:"created_at,omitempty" jsonschema:"Override creation timestamp (RFC3339). Use for backfilled session_summary so retention windows reflect the original session date."`
 }
 
 type MemorySearchInput struct {
