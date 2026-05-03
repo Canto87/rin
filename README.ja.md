@@ -139,16 +139,22 @@ config/
 
 ### 記憶の種類
 
-| Kind | 説明 |
-|------|------|
-| `session_journal` | セッションのタイトル + 要約 |
-| `arch_decision` | アーキテクチャ上の意思決定と根拠 |
-| `domain_knowledge` | 外部サービスの癖、トラブルシューティング記録 |
-| `team_pattern` | 協働パターン、ワークフロールール |
-| `active_task` | セッション間で引き継がれる未完了タスク |
-| `error_pattern` | 頻出エラーパターンと解決策 |
-| `preference` | ユーザーの好み (ワークフロー、ツール、スタイル) |
-| `routing_log` | モデルルーティングのパフォーマンスデータ |
+| Kind | 説明 | 保持期間 |
+|------|------|----------|
+| `session_summary` | セッション単位のタイトル + 2〜3文の要約 | 30日 |
+| `session_journal` | セッションの自由記述ジャーナル | 30日 |
+| `routing_log` | モデルルーティングのパフォーマンスデータ | 30日 |
+| `arch_decision` | アーキテクチャ上の意思決定と根拠 | 永続 |
+| `domain_knowledge` | 外部サービスの癖、トラブルシューティング記録 | 永続 |
+| `team_pattern` | 協働パターン、ワークフロールール | 永続 |
+| `active_task` | セッション間で引き継がれる未完了タスク | 永続 (完了時にアーカイブ) |
+| `error_pattern` | 頻出エラーパターンと解決策 | 永続 |
+| `preference` | ユーザーの好み (ワークフロー、ツール、スタイル) | 永続 |
+
+保持期間は毎日の `memory-dream` の pre-flight が決定論的に強制します
+(LLM の判断を介さない)。期限切れの種類はカットオフを過ぎるとアーカイブされ、
+永続的な種類は累積していきますが、コサイン類似度クラスタリングによって重複が
+整理されます — [手動運用](#手動運用) を参照。
 
 ## チームモード
 
@@ -306,6 +312,25 @@ make cc              チームモード終了
 make sync-harness       他プロジェクトにハーネスをデプロイ (TARGET=<パス>)
 make help               全ターゲットを表示
 ```
+
+### 手動運用
+
+通常は毎日の `memory-dream` の pre-flight が保持期間を自動で扱います。
+同じパスを直接実行することもでき、調査や単発のクリーンアップに有用です:
+
+```
+./src/rin_memory_go/rin-memory-go prune-routing-log
+./src/rin_memory_go/rin-memory-go prune-old-sessions
+./src/rin_memory_go/rin-memory-go dedupe -threshold 0.95               # ドライラン
+./src/rin_memory_go/rin-memory-go dedupe -threshold 0.95 -apply        # 反映
+./src/rin_memory_go/rin-memory-go dedupe -threshold 0.90 -exclude <id1>,<id2> -apply
+```
+
+`dedupe` は pgvector のコサイン類似度で
+`arch_decision`/`domain_knowledge`/`error_pattern`/`team_pattern` 内の
+近重複をクラスタリングし、最も新しいドキュメントを残してその他をアーカイブし、
+`supersedes` 関係を記録します。セッションのバックログ消化時には
+`MAX_BATCH=N make review` も役立ちます。
 
 ### オプション
 

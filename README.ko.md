@@ -138,16 +138,21 @@ config/
 
 ### 기억 종류
 
-| Kind | 설명 |
-|------|------|
-| `session_journal` | 세션 제목 + 요약 |
-| `arch_decision` | 아키텍처 결정과 근거 |
-| `domain_knowledge` | 외부 서비스 quirk, 트러블슈팅 기록 |
-| `team_pattern` | 협업 패턴, 워크플로우 규칙 |
-| `active_task` | 세션 간 이월되는 미완료 작업 |
-| `error_pattern` | 반복 에러 패턴과 해결법 |
-| `preference` | 사용자 선호 (워크플로우, 도구, 스타일) |
-| `routing_log` | 모델 라우팅 성능 데이터 |
+| Kind | 설명 | 보존 기간 |
+|------|------|-----------|
+| `session_summary` | 세션 단위 제목 + 2~3문장 요약 | 30일 |
+| `session_journal` | 세션 자유 형식 저널 | 30일 |
+| `routing_log` | 모델 라우팅 성능 데이터 | 30일 |
+| `arch_decision` | 아키텍처 결정과 근거 | 영속 |
+| `domain_knowledge` | 외부 서비스 quirk, 트러블슈팅 기록 | 영속 |
+| `team_pattern` | 협업 패턴, 워크플로우 규칙 | 영속 |
+| `active_task` | 세션 간 이월되는 미완료 작업 | 영속 (완료 시 archive) |
+| `error_pattern` | 반복 에러 패턴과 해결법 | 영속 |
+| `preference` | 사용자 선호 (워크플로우, 도구, 스타일) | 영속 |
+
+보존 기간은 매일 도는 `memory-dream`의 pre-flight가 결정론적으로 강제합니다
+(LLM 판단 없음). 시한이 정해진 종류는 cutoff를 넘기면 archive되고, 영속 종류는
+누적되지만 cosine 유사도 클러스터링으로 중복이 정리됩니다 — [수동 운영](#수동-운영) 참조.
 
 ## 팀 모드
 
@@ -305,6 +310,25 @@ make cc              팀 모드 종료
 make sync-harness       다른 프로젝트에 하네스 배포 (TARGET=<경로>)
 make help               전체 타겟 표시
 ```
+
+### 수동 운영
+
+평소에는 매일 도는 `memory-dream`의 pre-flight가 보존 기간을 자동으로 처리합니다.
+동일한 패스를 직접 호출할 수도 있어 점검이나 일회성 정리에 유용합니다:
+
+```
+./src/rin_memory_go/rin-memory-go prune-routing-log
+./src/rin_memory_go/rin-memory-go prune-old-sessions
+./src/rin_memory_go/rin-memory-go dedupe -threshold 0.95               # dry-run
+./src/rin_memory_go/rin-memory-go dedupe -threshold 0.95 -apply        # 적용
+./src/rin_memory_go/rin-memory-go dedupe -threshold 0.90 -exclude <id1>,<id2> -apply
+```
+
+`dedupe`는 pgvector cosine 유사도로
+`arch_decision`/`domain_knowledge`/`error_pattern`/`team_pattern` 내 근접
+중복을 클러스터링한 뒤 가장 최신 문서만 남기고 나머지를 archive하며
+`supersedes` 관계를 기록합니다. 세션 백로그를 빠르게 소화할 때는
+`MAX_BATCH=N make review`도 유용합니다.
 
 ### 선택적 설치
 
