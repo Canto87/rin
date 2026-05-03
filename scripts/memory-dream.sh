@@ -69,8 +69,8 @@ Use memory_search with targeted queries to find potential duplicates/contradicti
 1. **Completed active_tasks**: If an active_task's content indicates it's done
    (e.g., "completed", "merged", "deployed", status mentions completion),
    archive it via memory_update(doc_id=..., archive=True)
-2. **Old session_summaries**: Archive session_summaries older than 90 days
-   (check created_at field; today's date is provided below)
+2. **Old session_summary / session_journal**: Already handled by deterministic
+   pre-flight (`prune-old-sessions`, 30-day cutoff). Skip in this phase.
 3. **Tag enrichment**: For memories with fewer than 3 tags, add relevant tags
    based on their content via memory_update(doc_id=..., tags=[...])
 
@@ -91,6 +91,15 @@ SYSTEM_PROMPT="$(cat "$RIN_CTX")
 
 You are RIN. Follow the identity and decision boundaries above.
 This is an automated memory consolidation session. Be thorough but efficient."
+
+# Pre-flight: deterministic prune passes (no LLM)
+RIN_MEMORY_BIN="$RIN_HOME/src/rin_memory_go/rin-memory-go"
+if [ -x "$RIN_MEMORY_BIN" ]; then
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%S)] Pruning routing_log entries older than 30 days"
+  "$RIN_MEMORY_BIN" prune-routing-log 2>&1
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%S)] Pruning session_summary/session_journal older than 30 days"
+  "$RIN_MEMORY_BIN" prune-old-sessions 2>&1
+fi
 
 echo "[$(date -u +%Y-%m-%dT%H:%M:%S)] Starting memory dream"
 

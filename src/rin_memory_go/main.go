@@ -62,6 +62,12 @@ func main() {
 		case "pre-skill-hook":
 			runPreSkillHook()
 			return
+		case "prune-routing-log":
+			runPruneRoutingLog()
+			return
+		case "prune-old-sessions":
+			runPruneOldSessions()
+			return
 		}
 	}
 
