@@ -71,11 +71,11 @@ fi
 echo ""
 echo "=== Step 5: Ollama embedding test ==="
 # Pull model (this takes a while on first run)
-echo "  Pulling mxbai-embed-large..."
-curl -sf "${OLLAMA_HOST}/api/pull" -d '{"name":"mxbai-embed-large"}' | tail -1
+echo "  Pulling bge-m3..."
+curl -sf "${OLLAMA_HOST}/api/pull" -d '{"name":"bge-m3"}' | tail -1
 
 EMBED_DIM=$(curl -sf "${OLLAMA_HOST}/api/embed" \
-    -d '{"model":"mxbai-embed-large","input":"test embedding"}' | python3 -c "
+    -d '{"model":"bge-m3","input":"test embedding"}' | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
 print(len(data.get('embeddings', [[]])[0]))

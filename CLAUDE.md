@@ -48,7 +48,7 @@ launchd/            # macOS launchd plist
 
 - Go 1.26+ (rin-memory-go MCP server, rin-proxy)
 - PostgreSQL 17+ (metadata + full-text) + pgvector (vector search) + AGE (knowledge graph)
-- Ollama (local embeddings, mxbai-embed-large)
+- Ollama (local embeddings, bge-m3)
 - Docker (PostgreSQL hosting)
 - Python 3.11+ (session scripts only — harvest, picker)
 

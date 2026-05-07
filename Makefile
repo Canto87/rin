@@ -6,7 +6,7 @@
 
 LAUNCH_AGENTS_DIR := $(HOME)/Library/LaunchAgents
 RIN_HOME := $(shell pwd)
-OLLAMA_MODEL := mxbai-embed-large
+OLLAMA_MODEL := bge-m3
 
 # Read values from ~/.secrets (existing env vars take precedence)
 _secret = $(shell grep -E '^export $(1)=' $(HOME)/.secrets 2>/dev/null | cut -d= -f2-)

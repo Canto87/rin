@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	EmbedModel    = "mxbai-embed-large"
+	EmbedModel    = "bge-m3"
 	MaxChars      = 1500
 	FallbackChars = 800
 )

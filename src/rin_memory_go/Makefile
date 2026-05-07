@@ -5,7 +5,7 @@ PG_DB     := rin_memory
 PSQL      := /opt/homebrew/opt/postgresql@17/bin/psql
 PG_BIN    := /opt/homebrew/opt/postgresql@17/bin
 OLLAMA    := ollama
-MODEL     := mxbai-embed-large
+MODEL     := bge-m3
 RIN_HOME  := $(shell cd ../.. && pwd)
 
 # ── Check ───────────────────────────────────────────────
