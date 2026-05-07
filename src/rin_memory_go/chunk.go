@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	MaxChunk = 1200
-	Overlap  = 100
+	MaxChunk = 3000
+	Overlap  = 200
 )
 
 // Chunk represents a document chunk for embedding.

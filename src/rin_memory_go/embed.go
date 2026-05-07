@@ -14,8 +14,8 @@ import (
 
 const (
 	EmbedModel    = "bge-m3"
-	MaxChars      = 1500
-	FallbackChars = 800
+	MaxChars      = 6000
+	FallbackChars = 3000
 )
 
 // ollamaEmbedRequest is the request body for Ollama embed API.
